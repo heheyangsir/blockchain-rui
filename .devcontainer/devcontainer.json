@@ -1,0 +1,17 @@
+{
+    "name": "Blockchain Dev Container",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "settings": {
+        "terminal.integrated.shell.linux": "/bin/bash"
+    },
+    "extensions": [
+        "JuanBlanco.solidity",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode"
+    ],
+    "forwardPorts": [8545, 3000],
+    "remoteUser": "node",
+    
+}
