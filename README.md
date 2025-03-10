@@ -1,13 +1,19 @@
-# Sample Hardhat Project
+# Hardhat for Rui
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a Hardhat Ignition module that deploys that contract.
+## Quick start
 
-Try running some of the following tasks:
-
+1. Clone this repository and run hardhat node.
 ```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
+git clone https://github.com/heheyangsir/blockchain-rui
+cd blockchain-rui
+git submodule update --init --depth=1
+pnpm i
+npx hardhat compile
 npx hardhat node
-npx hardhat ignition deploy ./ignition/modules/Lock.ts
+```
+
+2. Start blockscout
+```shell
+cd blockchain-rui/plugins/blockscout/docker-compose
+docker-compose up -f hardhat-network.yml up -d
 ```
