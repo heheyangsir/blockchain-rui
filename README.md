@@ -71,7 +71,7 @@ docker-compose up -f hardhat-network.yml up -d
 | **Hardhat（本地链 & 部署）** | [https://hardhat.org/docs](https://hardhat.org/docs) |
 | **Viem（Web3 交互）** | [https://viem.sh](https://viem.sh) |
 | **IPFS（文件存储）** | [https://docs.ipfs.io/](https://docs.ipfs.io/) |
-
+| **BlockScout(区块链浏览器)** | [https://docs.blockscout.com/](https://docs.blockscout.com/) |
 ---
 
 
