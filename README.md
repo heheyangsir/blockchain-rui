@@ -14,7 +14,7 @@ npx hardhat node
 
 2. Start blockscout
 ```shell
-cd blockchain-rui/plugins/blockscout/docker-compose
+cd plugins/blockscout/docker-compose
 docker-compose up -f hardhat-network.yml up -d
 ```
 # **📌 基于区块链的数字凭证存储 DApp**
