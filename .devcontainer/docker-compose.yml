@@ -1,0 +1,22 @@
+services:
+  hardhat-devcontainer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hardhat-devcontainer
+    hostname: hardhat-devcontainer
+    networks:
+      - dev-shared
+    volumes:
+      # Mounts the project folder to '/workspace'. The target path inside the container
+      # should match what your application expects. In this case, the compose file is
+      # in a sub-folder, so you will mount '..'. You would then reference this path as the
+      # 'workspaceFolder' in '.devcontainer/devcontainer.json' so VS Code starts here.
+      - ..:/workspace:cached
+
+include:
+  - docker-compose.blockscout.yml
+
+networks:
+  dev-shared:
+    driver: bridge
