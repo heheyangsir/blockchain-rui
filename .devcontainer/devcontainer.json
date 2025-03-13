@@ -1,8 +1,10 @@
 {
     "name": "Blockchain Dev Container",
-    "build": {
-        "dockerfile": "Dockerfile"
-    },
+    "dockerComposeFile": [
+        "docker-compose.yml"
+    ],
+    "service": "hardhat-devcontainer",
+    "workspaceFolder": "/workspace",
     "settings": {
         "terminal.integrated.shell.linux": "/bin/bash"
     },
@@ -11,7 +13,6 @@
         "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode"
     ],
-    "forwardPorts": [8545, 3000],
-    "remoteUser": "node",
-    
+    "forwardPorts": [8545, 3000, 4000],
+    "remoteUser": "node"
 }

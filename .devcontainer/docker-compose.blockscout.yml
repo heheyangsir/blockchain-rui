@@ -1,0 +1,107 @@
+services:
+  redis-db:
+    extends:
+      file: ../plugins/blockscout/docker-compose/services/redis.yml
+      service: redis-db
+    networks:
+      - dev-shared
+
+  db-init:
+    extends:
+      file: ../plugins/blockscout/docker-compose/services/db.yml
+      service: db-init
+    networks:
+      - dev-shared
+  db:
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    extends:
+      file: ../plugins/blockscout/docker-compose/services/db.yml
+      service: db
+    networks:
+      - dev-shared
+  backend:
+    depends_on:
+      - db
+      - redis-db
+      - hardhat-devcontainer
+    extends:
+      file: ../plugins/blockscout/docker-compose/services/backend.yml
+      service: backend
+    links:
+      - db:database
+    environment:
+        ETHEREUM_JSONRPC_VARIANT: 'geth'
+        ETHEREUM_JSONRPC_WS_URL: ws://hardhat-devcontainer:8545/
+        INDEXER_DISABLE_PENDING_TRANSACTIONS_FETCHER: 'true'
+        INDEXER_INTERNAL_TRANSACTIONS_TRACER_TYPE: 'opcode'
+        CHAIN_ID: '31337'
+    networks:
+      - dev-shared
+  visualizer:
+    extends:
+      file: ../plugins/blockscout/docker-compose/services/visualizer.yml
+      service: visualizer
+    networks:
+      - dev-shared
+  sig-provider:
+    extends:
+      file: ../plugins/blockscout/docker-compose/services/sig-provider.yml
+      service: sig-provider
+    networks:
+      - dev-shared
+  frontend:
+    depends_on:
+      - backend
+    extends:
+      file: ../plugins/blockscout/docker-compose/services/frontend.yml
+      service: frontend
+    environment:
+      NEXT_PUBLIC_NETWORK_ID: '31337'
+      NEXT_PUBLIC_NETWORK_RPC_URL: http://hardhat-devcontainer:8545/
+    networks:
+      - dev-shared
+  stats-db-init:
+    extends:
+      file: ../plugins/blockscout/docker-compose/services/stats.yml
+      service: stats-db-init
+    networks:
+      - dev-shared
+  stats-db:
+    depends_on:
+      stats-db-init:
+        condition: service_completed_successfully
+    extends:
+      file: ../plugins/blockscout/docker-compose/services/stats.yml
+      service: stats-db
+    networks:
+      - dev-shared
+  stats:
+    depends_on:
+      - stats-db
+      - backend
+    extends:
+      file: ../plugins/blockscout/docker-compose/services/stats.yml
+      service: stats
+    networks:
+      - dev-shared
+  user-ops-indexer:
+    depends_on:
+      - db
+      - backend
+    extends:
+      file: ../plugins/blockscout/docker-compose/services/user-ops-indexer.yml
+      service: user-ops-indexer
+    networks:
+      - dev-shared
+  proxy:
+    depends_on:
+      - backend
+      - frontend
+      - stats
+    extends:
+      file: ../plugins/blockscout/docker-compose/services/nginx.yml
+      service: proxy
+    networks:
+      - dev-shared
