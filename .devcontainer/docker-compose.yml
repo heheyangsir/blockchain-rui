@@ -16,6 +16,7 @@ services:
 
 include:
   - docker-compose.blockscout.yml
+  - docker-compose.ipfs.yml
 
 networks:
   dev-shared:
