@@ -1,0 +1,14 @@
+services:
+  ipfs_host:
+    image: ipfs/kubo:v0.33.2
+    container_name: ipfs_host
+    hostname: ipfs_host
+    networks:
+      - dev-shared
+    volumes:
+      - staging:/export
+      - data:/data/ipfs
+
+volumes:
+  staging:
+  data:
