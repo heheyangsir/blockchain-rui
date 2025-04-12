@@ -1,6 +1,9 @@
 <template>
-  <div class="shadow-xl p-4 w-full rounded-xl">
-    <p class="font-bold text-xl my-4">登入网络</p>
+  <div class="shadow-xl p-4 w-full max-w-md rounded-xl">
+    <div class="my-4">
+      <p class="font-bold text-xl">登入网络</p>
+      <p class="text-gray-500 text-sm">立刻开始链上生活</p>
+    </div>
     <button
       @click="handleWalletConnect"
       :class="[
@@ -114,19 +117,6 @@
                   </button>
                 </div>
               </div>
-              <div class="text-sm font-medium text-emerald-600">{{}} ETH</div>
-              <div v-if="isFetching" class="text-sm text-gray-500 mt-2">
-                <svg
-                  class="animate-spin h-4 w-4 inline-block mr-2"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    fill="currentColor"
-                    d="M12,4V2A10,10 0 0,0 2,12H4A8,8 0 0,1 12,4Z"
-                  />
-                </svg>
-                正在更新余额...
-              </div>
             </div>
           </div>
         </div>
@@ -166,11 +156,9 @@ import type { WalletClient } from "viem";
 import { useRouter } from "vue-router";
 
 const accountStore = useAccountStore();
-const { accountAddress } = storeToRefs(accountStore);
 const isConnected = ref(false);
 const error = ref<any>();
 const addresses = ref<string[]>([]);
-const isFetching = ref(false);
 const client = ref<WalletClient | null>();
 const selectedIndex = ref<number>(0);
 const router = useRouter();
