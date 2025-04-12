@@ -15,6 +15,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       defaultChainId: 31337,
+      defaultChainName: "Rui",
       defaultRpcUrl: 'http://localhost:8545'
     }
   }

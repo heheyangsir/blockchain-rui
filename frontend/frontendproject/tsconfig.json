@@ -1,4 +1,16 @@
 {
   // https://nuxt.com/docs/guide/concepts/typescript
-  "extends": "./.nuxt/tsconfig.json"
+  "extends": "./.nuxt/tsconfig.json",
+  "include": [
+    "types/**/*.d.ts",
+    "stores/**/*.ts",
+    "pages/**/*.ts",
+  ],
+  "compilerOptions": {
+    "types": ["nuxt"],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
+    }
+  }
 }

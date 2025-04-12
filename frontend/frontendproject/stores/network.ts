@@ -7,7 +7,7 @@ interface NetworkState {
   chainId: number
   chainName: string
   rpcUrl: string
-  currentChain: Chain | null
+  currentChain: Chain
 }
 
 export const useNetworkStore = defineStore('network', {
