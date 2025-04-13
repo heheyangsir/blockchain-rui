@@ -24,7 +24,7 @@
 </template>
 
 <script setup lang="ts">
-import { useAccountStore, networkInfo } from "../stores/account";
+import { useAccountStore, networkInfo } from "../../stores/account";
 import { storeToRefs } from "pinia";
 import { ref } from "vue";
 

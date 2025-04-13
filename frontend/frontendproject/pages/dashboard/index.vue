@@ -6,7 +6,8 @@ import { ref } from "vue";
 import { createPublicClient, formatEther, http } from "viem";
 import { useRouter } from "vue-router";
 import UserAside from "../../components/UserAside.vue";
-import UserBalance from "../../components/UserBalance.vue";
+import UserBalance from "../../components/Card/UserBalance.vue";
+import UserUpload from "../../components/Card/UserUpload.vue";
 
 const accountStore = useAccountStore();
 const { accountAddress } = storeToRefs(accountStore);
@@ -43,7 +44,6 @@ const showMenu = ref(false);
 </script>
 
 <template>
-  <!-- <div v-if="!isLoading">{{ formatEther(balance!) }} ETH</div> -->
   <div class="min-h-screen flex bg-gray-50">
     <!-- 侧边导航 -->
     <UserAside />
@@ -74,71 +74,14 @@ const showMenu = ref(false);
 
       <!-- 数据卡片 -->
       <div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <!-- 存储数 -->
-        <div class="bg-white p-6 rounded-xl shadow-sm">
-          <h3 class="text-gray-500 text-sm font-medium">总存储数</h3>
-          <p class="mt-2 text-3xl font-bold text-gray-900">12,842</p>
-          <div class="mt-4 flex items-center text-sm text-green-600">
-            <svg
-              class="w-4 h-4 mr-1"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-              />
-            </svg>
-            8.2% 周增长
-          </div>
-        </div>
+        <!-- 上传数 -->
+        <UserUpload />
 
         <!-- 下载数 -->
-        <div class="bg-white p-6 rounded-xl shadow-sm">
-          <h3 class="text-gray-500 text-sm font-medium">总下载数</h3>
-          <p class="mt-2 text-3xl font-bold text-gray-900">242</p>
-          <div class="mt-4 flex items-center text-sm text-red-600">
-            <svg
-              class="w-4 h-4 mr-1"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
-              />
-            </svg>
-            1.5% 周下降
-          </div>
-        </div>
+        <UserSearch />
 
         <!-- 活跃用户 -->
-        <div class="bg-white p-6 rounded-xl shadow-sm">
-          <h3 class="text-gray-500 text-sm font-medium">活跃用户</h3>
-          <p class="mt-2 text-3xl font-bold text-gray-900">2,142</p>
-          <div class="mt-4 flex items-center text-sm text-blue-600">
-            <svg
-              class="w-4 h-4 mr-1"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M13 10V3L4 14h7v7l9-11h-7z"
-              />
-            </svg>
-            实时更新
-          </div>
-        </div>
+        <UserActive />
 
         <!-- 余额 -->
         <UserBalance />
