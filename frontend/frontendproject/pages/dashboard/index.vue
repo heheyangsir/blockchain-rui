@@ -8,6 +8,10 @@ import { useRouter } from "vue-router";
 import UserAside from "../../components/UserAside.vue";
 import UserBalance from "../../components/Card/UserBalance.vue";
 import UserUpload from "../../components/Card/UserUpload.vue";
+import UserSearch from "../../components/Card/UserSearch.vue";
+import UserActive from "../../components/Card/UserActive.vue";
+import UserChart from "../../components/UserChart.vue";
+import UserProfile from "../../components/UserProfile.vue";
 
 const accountStore = useAccountStore();
 const { accountAddress } = storeToRefs(accountStore);
@@ -85,7 +89,7 @@ const showMenu = ref(false);
 
         <!-- 余额 -->
         <UserBalance />
-        </div>
+      </div>
       <!-- 图表 -->
       <UserChart />
     </main>
