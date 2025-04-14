@@ -230,6 +230,6 @@ const login = async () => {
   console.log(addresses.value[selectedIndex.value]);
   accountStore.setAccountAddress(addresses.value[selectedIndex.value]);
 
-  router.push({ path: "/dashboard" });
+  router.push({ path: "/dashboard/user" });
 };
 </script>
