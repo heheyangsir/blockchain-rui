@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
-    "viem": "^2.27.0"
+    "viem": "^2.27.0",
+    "hardhat": "^2.22.19",
+    "ant-design-vue": "4.x"
   }
 }
