@@ -1,7 +1,7 @@
 {
     "name": "Blockchain Dev Container",
     "build":{
-        "dockerfile": "dockerfile"
+        "dockerfile": "Dockerfile"
     },
     "remoteUser": "node"
 }
