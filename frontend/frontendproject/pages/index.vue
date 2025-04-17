@@ -1,258 +1,303 @@
 <template>
-  <div class="p-6 max-w-2xl mx-auto space-y-6 bg-white rounded shadow">
-    <h1 class="text-2xl font-bold">凭证合约功能测试</h1>
+  <div class="p-6 max-w-5xl mx-auto space-y-10">
+    <h1 class="text-2xl font-bold text-center">📦 CredentialRegistry 测试页面</h1>
 
-    <!-- 连接钱包按钮 -->
-    <button class="btn bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700" @click="connect">
-      连接钱包
-    </button>
-    <p v-if="isConnected">钱包已连接：{{ addresses.join(', ') }}</p>
+    <!-- 钱包连接 -->
+    <section class="space-y-2">
+      <button @click="connectWallet" class="btn-blue">🔗 {{ isConnected ? '钱包已连接' : '连接钱包' }}</button>
+      <p v-if="isConnected">当前地址：{{ account }}</p>
+    </section>
 
-    <!-- 输入交易哈希 -->
-    <input v-model="txHash" placeholder="请输入交易哈希" class="w-full px-4 py-2 border rounded" />
-    <button @click="queryByTxHash" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-      查询凭证（按交易哈希）
-    </button>
+    <!-- 上传凭证 -->
+    <section class="card">
+      <h2>📤 上传凭证</h2>
+      <input v-model="upload.name" placeholder="凭证名称" class="input" />
+      <input v-model="upload.owner" placeholder="持有者地址" class="input" />
+      <input type="file" @change="e => { const target = e.target as HTMLInputElement; upload.file = target?.files?.[0] || null }" class="input" />
+      <button @click="uploadCredential" class="btn-green">上传凭证</button>
+    </section>
 
-    <!-- 存储凭证表单 -->
-    <div>
-      <input v-model="credentialName" placeholder="请输入凭证名称" class="w-full px-4 py-2 border rounded mb-2" />
-      <input v-model="owner" placeholder="请输入持有者地址" class="w-full px-4 py-2 border rounded mb-2" />
+    <!-- 认证凭证 -->
+    <section class="card">
+      <h2>✅ 认证凭证</h2>
+      <input v-model.number="certify.index" placeholder="凭证索引" class="input" />
+      <select v-model.number="certify.level" class="input">
+        <option :value="1">他人认证</option>
+        <option :value="2" :disabled="!isAuthorized">官方认证</option>
+      </select>
+      <button @click="certifyCredential" class="btn-blue">发起认证</button>
+    </section>
 
-      <!-- 上传文件按钮 -->
-      <input type="file" @change="handleFileChange" class="w-full px-4 py-2 border rounded mb-2" />
-      <button @click="storeCredential" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-        存储凭证
-      </button>
-    </div>
+    <!-- 查询凭证（三合一） -->
+    <section class="card">
+      <h2>🔍 查询凭证（三合一）</h2>
+      <input v-model="queryInput" @input="clearQuery" placeholder="输入地址 / 原始文件 / 交易哈希" class="input" type="text" />
+      <input v-if="expectingFile" type="file" @change="handleFileChange" class="input" />
+      <button @click="handleQuery" class="btn-yellow w-full">开始查询</button>
 
-    <!-- 获取所有凭证 -->
-    <div>
-      <input v-model="userAddress" placeholder="请输入用户地址" class="w-full px-4 py-2 border rounded mb-2" />
-      <button @click="getAllCredentialsByOwner" class="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700">
-        查询该账户的所有凭证
-      </button>
-    </div>
-
-    <!-- 显示凭证信息 -->
-    <div v-if="credential" class="space-y-2 border-t pt-4">
-      <p><strong>CID：</strong>{{ credential.cid }}</p>
-      <p><strong>名称：</strong>{{ credential.name }}</p>
-      <p><strong>签发者：</strong>{{ credential.issuer }}</p>
-      <p><strong>持有者：</strong>{{ credential.owner }}</p>
-      <p><strong>上传时间：</strong>{{ formatTimestamp(credential.timestamp) }}</p>
-      <a :href="`http://localhost:8080/ipfs/${credential.cid}`" target="_blank" class="text-blue-600 underline">
-        查看文件
-      </a>
-    </div>
-
-    <!-- 显示所有凭证 -->
-    <div v-if="allCredentials.length > 0" class="space-y-2 border-t pt-4">
-      <h2>用户所有凭证：</h2>
-      <div v-for="(cred, index) in allCredentials" :key="index">
-        <p><strong>CID：</strong>{{ cred.cid }}</p>
-        <p><strong>名称：</strong>{{ cred.name }}</p>
-        <p><strong>持有者：</strong>{{ cred.owner }}</p>
-        <p><strong>签发者：</strong>{{ cred.issuer }}</p>
-        <p><strong>上传时间：</strong>{{ formatTimestamp(cred.timestamp) }}</p>
-        <a :href="`http://localhost:8080/ipfs/${cred.cid}`" target="_blank" class="text-blue-600 underline">
-          查看文件
-        </a>
-        <hr />
+      <div v-if="results.length">
+        <h3 class="font-semibold">查询结果：</h3>
+        <div v-for="(cred, idx) in results" :key="idx" class="border p-2 mt-2 rounded bg-gray-100 text-sm">
+          <p><strong>凭证名：</strong>{{ cred.name }}</p>
+          <p><strong>持有者：</strong>{{ cred.owner }}</p>
+          <p><strong>认证等级：</strong>{{ formatCertification(cred.certification) }}</p>
+          <p><strong>是否失效：</strong>{{ cred.expired ? '✅' : '❌' }}</p>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <!-- 存储成功的交易哈希 -->
-    <p v-if="transactionHash" class="text-green-600">凭证存储成功，交易哈希：{{ transactionHash }}</p>
+    <!-- 设置名称 -->
+    <section class="card">
+      <h2>🧾 设置账户名称</h2>
+      <input v-model="accountName" placeholder="设置名称" class="input" />
+      <button @click="setAccountName" class="btn-blue">设置名称</button>
+    </section>
 
-    <p v-if="error" class="text-red-600">错误：{{ error }}</p>
-    <p v-if="!credential && !error && queried">未找到凭证</p>
+    <!-- 设置授权 -->
+    <section class="card">
+      <h2>🎓 授权账户为官方认证人</h2>
+      <input v-model="authAddr" placeholder="地址" class="input" />
+      <button @click="authorizeAccount" class="btn-red">添加授权</button>
+    </section>
+
+    <!-- 设置失效 -->
+    <section class="card">
+      <h2>⛔ 设置凭证失效</h2>
+      <input v-model.number="expiredIndex" placeholder="凭证索引" class="input" />
+      <button @click="expireCredential" class="btn-red">标记为失效</button>
+    </section>
+
+    <p class="text-red-600 font-medium" v-if="error">{{ error }}</p>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { createPublicClient, createWalletClient, custom, decodeEventLog, http } from 'viem'
+import { CredentialRegistryAbi } from '../../../abi/CredentialRegistry'
+import { createWalletClient, createPublicClient, custom, http } from 'viem'
 import { hardhat } from 'viem/chains'
-import { CredentialRegistryAbi } from '../../../abi/CredentialRegistry'  // 引入ABI文件
-import type { WalletClient } from 'viem'
 
-const contractAddress = '0x5FbDB2315678afecb367f032d93F642f64180aa3' // 合约地址
-const txHash = ref('')
-const credential = ref<any>(null)
-const allCredentials = ref<any>([])
-const credentialName = ref('')
-const owner = ref('')
-const userAddress = ref('')
-const fileCid = ref('')
+const contractAddress = '0x5FbDB2315678afecb367f032d93F642f64180aa3'
+
+const wallet = ref<any>(null)
+const account = ref('')
+const isConnected = ref(false)
+const isAuthorized = ref(false)
+
+const upload = ref<{ name: string; owner: string; file: File | null }>({ name: '', owner: '', file: null })
+const certify = ref({ index: 0, level: 1 })
+const results = ref<any[]>([])
+const accountName = ref('')
+const authAddr = ref('')
+const expiredIndex = ref<number>(0)
 const error = ref('')
-const queried = ref(false)
-const transactionHash = ref<string>('')  // 存储交易哈希
-const fileData = ref<File | null>(null) // 存储上传的文件
 
-const publicClient = createPublicClient({
-  chain: hardhat,  // 网络配置
-  transport: http('http://localhost:8545'),
-})
+const queryInput = ref('')
+const fileData = ref<File | null>(null)
+const expectingFile = ref(false)
 
-const walletClient = ref<WalletClient | null>(null)
-const addresses = ref<string[]>([])
-const isConnected = ref<boolean>(false)
+const publicClient = createPublicClient({ chain: hardhat, transport: http() })
 
-const connect = async () => {
-  try {
-    if (typeof window !== 'undefined' && (window as any).ethereum) {
-      console.log('✅ Ethereum detected')
-      walletClient.value = createWalletClient({
-        chain: hardhat,
-        transport: custom((window as any).ethereum),
-      })
-      const rstAddresses = await walletClient.value.requestAddresses()
-      if (!rstAddresses) {
-        throw new Error('未连接钱包')
-      }
-      addresses.value = rstAddresses as [`0x${string}`]
-      isConnected.value = addresses.value.length > 0
-    }
-  } catch (err: any) {
-    error.value = err.message || '钱包连接失败'
-  }
+const connectWallet = async () => {
+  const ethereum = (window as any).ethereum
+  wallet.value = createWalletClient({ chain: hardhat, transport: custom(ethereum) })
+  const [addr] = await wallet.value.requestAddresses()
+  account.value = addr
+  isConnected.value = true
+  isAuthorized.value = await publicClient.readContract({
+    address: contractAddress,
+    abi: CredentialRegistryAbi,
+    functionName: 'isAuthorized',
+    args: [addr],
+  })
 }
 
-// 处理文件上传
-const handleFileChange = (event: Event) => {
-  const fileInput = event.target as HTMLInputElement
-  const file = fileInput.files ? fileInput.files[0] : null
-  if (file) {
-    fileData.value = file
-    console.log('选中的文件:', file)
-  }
-}
-
-// 存储凭证
-const storeCredential = async () => {
+const uploadCredential = async () => {
   try {
-    if (!credentialName.value || !owner.value || !fileData.value) {
-      throw new Error('所有字段都必须填写，包括文件上传')
-    }
-    if (!walletClient.value) {
-      throw new Error('钱包未连接')
-    }
-
-    const [account] = await walletClient.value.getAddresses()
-    if (!account) {
-      throw new Error('未连接钱包')
-    }
-
-    // 上传文件到 IPFS
+    error.value = ''
     const form = new FormData()
-    form.append('file', fileData.value as Blob)
-    const res = await fetch('http://localhost:5001/api/v0/add', { method: 'POST', body: form })
-    const text = await res.text()
-    const match = text.match(/"Hash":"([^"]+)"/)
-    if (match) {
-      fileCid.value = match[1]
+    form.append('file', upload.value.file)
+    const fileRes = await fetch('http://localhost:5001/api/v0/add', { method: 'POST', body: form })
+    const fileText = await fileRes.text()
+    const fileCid = fileText.match(/"Hash":\s*"([^"]+)"/)?.[1] // 修复正则表达式
+
+    if (!fileCid) throw new Error('文件 CID 提取失败')
+
+    const meta = {
+      credentialName: upload.value.name,
+      fileCid,
+      owner: upload.value.owner,
+      timestamp: new Date().toISOString()
     }
+    const metaForm = new FormData()
+    metaForm.append('file', new Blob([JSON.stringify(meta)], { type: 'application/json' }))
+    const metaRes = await fetch('http://localhost:5001/api/v0/add', { method: 'POST', body: metaForm })
+    const metaText = await metaRes.text()
+    const metadataCid = metaText.match(/"Hash":\s*"([^"]+)"/)?.[1] // 修复正则表达式
 
-    // 创建包含文件CID和其他字段的JSON对象
-    const jsonData = {
-      fileCid: fileCid.value,
-      credentialName: credentialName.value,
-      owner: owner.value,
-      timestamp: new Date().toISOString(),
-    }
+    if (!metadataCid) throw new Error('元数据 CID 提取失败')
 
-    // 将 JSON 转换为 Blob 并上传到 IPFS
-    const jsonBlob = new Blob([JSON.stringify(jsonData)], { type: 'application/json' })
-    const formData = new FormData()
-    formData.append('file', jsonBlob, 'credential.json')
-
-    // 上传 JSON 文件到 IPFS
-    const jsonRes = await fetch('http://localhost:5001/api/v0/add', {
-      method: 'POST',
-      body: formData,  // 发送 FormData，其中包含了 Blob 格式的 JSON 文件
-    })
-
-    const jsonText = await jsonRes.text()
-    const jsonMatch = jsonText.match(/"Hash":"([^"]+)"/)
-    if (!jsonMatch) throw new Error('JSON上传失败，CID解析失败')
-
-    const jsonCid = jsonMatch[1] // 获取第二次上传的CID
-
-    // 将 JSON 文件的 CID 存储到智能合约
     const { request } = await publicClient.simulateContract({
       address: contractAddress,
       abi: CredentialRegistryAbi,
       functionName: 'storeCredential',
-      account,
-      args: [jsonCid, credentialName.value, owner.value],  // 使用第二次上传的JSON文件CID
+      args: [metadataCid, upload.value.name, upload.value.owner],
+      account: account.value,
     })
-
-    const hash = await walletClient.value.writeContract(request)
-    transactionHash.value = hash // 保存交易哈希
-    error.value = ''
+    await wallet.value.writeContract(request)
   } catch (err: any) {
-    error.value = err.message || '存储凭证失败'
+    error.value = err.message || '上传失败'
   }
 }
 
-// 查询凭证（按交易哈希）
-const queryByTxHash = async () => {
-  credential.value = null
+const certifyCredential = async () => {
+  const { request } = await publicClient.simulateContract({
+    address: contractAddress,
+    abi: CredentialRegistryAbi,
+    functionName: 'certifyCredential',
+    args: [certify.value.index, certify.value.level],
+    account: account.value,
+  })
+  await wallet.value.writeContract(request)
+}
+
+const setAccountName = async () => {
+  const { request } = await publicClient.simulateContract({
+    address: contractAddress,
+    abi: CredentialRegistryAbi,
+    functionName: 'setAccountName',
+    args: [accountName.value],
+    account: account.value,
+  })
+  await wallet.value.writeContract(request)
+}
+
+const authorizeAccount = async () => {
+  const { request } = await publicClient.simulateContract({
+    address: contractAddress,
+    abi: CredentialRegistryAbi,
+    functionName: 'setAuthorizedEntity',
+    args: [authAddr.value, true],
+    account: account.value,
+  })
+  await wallet.value.writeContract(request)
+}
+
+const expireCredential = async () => {
+  const { request } = await publicClient.simulateContract({
+    address: contractAddress,
+    abi: CredentialRegistryAbi,
+    functionName: 'setExpired',
+    args: [expiredIndex.value, true],
+    account: account.value,
+  })
+  await wallet.value.writeContract(request)
+}
+
+const clearQuery = () => {
   error.value = ''
-  queried.value = false
+  results.value = []
+  expectingFile.value = queryInput.value.trim().toLowerCase() === 'file'
+}
+
+const handleFileChange = async (e: Event) => {
+  const input = e.target as HTMLInputElement
+  fileData.value = input.files?.[0] || null
+}
+
+const handleQuery = async () => {
+  error.value = ''
+  results.value = []
+
   try {
-    const receipt = await publicClient.getTransactionReceipt({
-      hash: txHash.value as `0x${string}`,
-    })
+    const input = queryInput.value.trim()
 
-    const targetLog = receipt.logs.find((log) => {
-      return log.transactionHash === txHash.value && log.address.toLowerCase() === contractAddress.toLowerCase()
-    })
+    if (input === 'file') {
+      if (!fileData.value) throw new Error('请先选择文件')
+      const form = new FormData()
+      form.append('file', fileData.value)
+      const res = await fetch('http://localhost:5001/api/v0/add', { method: 'POST', body: form })
+      const text = await res.text()
+      const match = text.match(/"Hash":\s*"([^"]+)"/) // 修复正则表达式
+      if (!match) throw new Error('IPFS CID 提取失败')
+      const cid = match[1]
 
-    if (!targetLog) {
-      queried.value = true
-      return
+      const total = await publicClient.readContract({
+        address: contractAddress,
+        abi: CredentialRegistryAbi,
+        functionName: 'totalCredentials',
+      }) as number
+
+      for (let i = 0; i < total; i++) {
+        const cred = await publicClient.readContract({
+          address: contractAddress,
+          abi: CredentialRegistryAbi,
+          functionName: 'getCredential',
+          args: [i],
+        })
+        if ((cred as any).cid === cid) results.value.push(cred)
+      }
+      if (results.value.length === 0) throw new Error('未找到该文件对应的凭证')
+    } else if (input.length === 66 && input.startsWith('0x')) {
+      const tx = await publicClient.getTransactionReceipt({ hash: input as `0x${string}` })
+      const logs = tx.logs || []
+      const log = logs.find(l => l.topics[0].toLowerCase() === '0x3b0a43ccc1ccd1c76ebb1a8d998fdfe1ded3766582dbbbcdda83889170bec53d')
+      if (!log) throw new Error('凭证日志未找到，可能交易哈希无效')
+
+      const indexHex = log.topics[1]
+      const index = parseInt(indexHex, 16)
+
+      const cred = await publicClient.readContract({
+        address: contractAddress,
+        abi: CredentialRegistryAbi,
+        functionName: 'getCredential',
+        args: [index],
+      })
+      results.value.push(cred)
+    } else if (input.length === 42 && input.startsWith('0x')) {
+      const creds = await publicClient.readContract({
+        address: contractAddress,
+        abi: CredentialRegistryAbi,
+        functionName: 'getByOwner',
+        args: [input as `0x${string}`],
+      }) as any[]
+      if (creds.length === 0) throw new Error('该地址没有凭证')
+      results.value = creds
+    } else {
+      throw new Error('请输入合法地址 / 交易哈希 / 输入 "file" 后上传原文件')
     }
-
-    const { args } = decodeEventLog({
-      abi: CredentialRegistryAbi,
-      data: targetLog.data,
-      topics: targetLog.topics,
-      eventName: 'CredentialStored',
-    })
-
-    credential.value = args
-    queried.value = true
   } catch (err: any) {
     error.value = err.message || '查询失败'
   }
 }
 
-// 查询该账户的所有凭证
-const getAllCredentialsByOwner = async () => {
-  allCredentials.value = []
-  error.value = ''
-  try {
-    allCredentials.value = await publicClient.readContract({
-      address: contractAddress,
-      abi: CredentialRegistryAbi,
-      functionName: 'getByOwner',
-      args: [userAddress.value],
-    })
-  } catch (err: any) {
-    error.value = err.message || '查询凭证失败'
+const formatCertification = (level: number) => {
+  switch (level) {
+    case 0: return '未认证'
+    case 1: return '他人认证'
+    case 2: return '官方认证'
+    default: return '未知'
   }
-}
-
-// 格式化时间戳
-const formatTimestamp = (ts: any) => {
-  return new Date(Number(ts) * 1000).toLocaleString()
 }
 </script>
 
 <style scoped>
-input {
-  outline: none;
+.input {
+  @apply w-full p-2 border border-gray-300 rounded my-2;
+}
+.btn-blue {
+  @apply bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700;
+}
+.btn-green {
+  @apply bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700;
+}
+.btn-yellow {
+  @apply bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600;
+}
+.btn-red {
+  @apply bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700;
+}
+.card {
+  @apply bg-white p-4 rounded shadow space-y-2;
 }
 </style>
