@@ -140,7 +140,6 @@
 </template>
 
 <script setup lang="ts">
-import { storeToRefs } from "pinia";
 import { ref } from "vue";
 import { useAccountStore, networkInfo } from "../stores/account";
 import { createWalletClient, custom } from "viem";
@@ -222,6 +221,6 @@ const login = async () => {
   console.log(addresses.value[selectedIndex.value]);
   accountStore.setAccountAddress(addresses.value[selectedIndex.value]);
 
-  router.push({ path: "/dashboard/user" });
+  router.push({ path: "/dashboard" });
 };
 </script>

@@ -3,10 +3,9 @@ import { defineStore } from 'pinia'
 import type { Chain } from 'viem'
 import { mainnet } from 'viem/chains'
 
-
 interface AccountState {
-  accountAddress: string | null,
-  lastUpdateDatetime: number | 0,
+  accountAddress: string | null
+  lastUpdateDatetime: number
 }
 
 export interface NetworkInfo {
@@ -16,38 +15,70 @@ export interface NetworkInfo {
   currentChain: Chain
 }
 
-export const networkInfo = {
+export const networkInfo: NetworkInfo = {
   chainId: 31337,
-  chainName: "Rui",
-  rpcUrl: "http://localhost:8545",
+  chainName: 'Rui',
+  rpcUrl: 'http://localhost:8545',
   currentChain: mainnet,
 }
 
+const STORAGE_KEY = 'accountStore'
+
 export const useAccountStore = defineStore('account', {
-  state: (): AccountState => ({
-    accountAddress: null,
-    lastUpdateDatetime: 0,
-  }),
+  state: (): AccountState => {
+    let stored: Partial<AccountState> = {}
+    if (typeof window !== 'undefined') {
+      try {
+        stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
+      } catch (e) {
+        console.warn('Failed to parse accountStore from localStorage', e)
+      }
+    }
+
+    return {
+      accountAddress: stored.accountAddress ?? null,
+      lastUpdateDatetime: stored.lastUpdateDatetime ?? 0,
+    }
+  },
 
   actions: {
     setAccountAddress(address: string) {
-      this.accountAddress = address;
-      this.lastUpdateDatetime = Date.now();
+      this.accountAddress = address
+      this.lastUpdateDatetime = Date.now()
+      this._syncToStorage()
     },
-    
+
     setupAccountListeners() {
-      if (window.ethereum) {
+      if (typeof window !== 'undefined' && window.ethereum) {
         window.ethereum.on('accountsChanged', (_: string[]) => {
-          useRouter().replace("/auth/login");
-          this.accountAddress = null;
-          this.lastUpdateDatetime = Date.now();
+          useRouter().replace('/auth/login')
+          this.accountAddress = null
+          this.lastUpdateDatetime = Date.now()
+          this._syncToStorage()
         })
       }
     },
 
     disconnect() {
-      this.accountAddress = null;
-      this.lastUpdateDatetime = Date.now();
+      this.accountAddress = null
+      this.lastUpdateDatetime = Date.now()
+      this._syncToStorage()
+    },
+
+    /**
+     * 同步当前 state 到 localStorage
+     */
+    _syncToStorage() {
+      if (typeof window === 'undefined') return
+      const payload: AccountState = {
+        accountAddress: this.accountAddress,
+        lastUpdateDatetime: this.lastUpdateDatetime,
+      }
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
+      } catch (e) {
+        console.warn('Failed to write accountStore to localStorage', e)
+      }
     }
   }
 })
