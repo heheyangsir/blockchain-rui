@@ -57,7 +57,7 @@
               <div v-for="cred in credentials" :key="cred.txHash" class="p-4 bg-gray-50 rounded-xl shadow-sm">
                 <div class="grid grid-cols-2 gap-4 text-sm">
                   <div class="font-semibold">📁 CID</div>
-                  <div>{{ cred.metadataCid }}</div>
+                  <div>{{ cred.cid }}</div>
                   <div class="font-semibold">📌 名称</div>
                   <div>{{ cred.name }}</div>
                   <div class="font-semibold">🔗 交易哈希</div>
@@ -100,7 +100,7 @@ import { networkInfo } from '../../stores/account';
 import type { Address } from 'viem';
 
 interface CredentialLog {
-  metadataCid: string;
+  cid: string;
   name: string;
   owner: Address;
   blockNumber: number;
@@ -144,16 +144,16 @@ const fetchCredentials = async () => {
     for (const log of logs) {
       // 解码日志并断言 args 类型
       const evt = decodeEventLog({ abi: CredentialRegistryAbi, eventName: 'CredentialStored', data: log.data, topics: log.topics }) as {
-        args: { metadataCid: string; name: string; owner: Address };
+        args: { cid: string; name: string; owner: Address };
       };
       if (!evt.args) continue;
-      const { metadataCid, name, owner } = evt.args;
+      const { cid, name, owner } = evt.args;
       if (owner.toLowerCase() !== currentAddress.value.toLowerCase()) continue;
 
       // 获取区块时间戳
       const block = await publicClient.getBlock({ blockNumber: log.blockNumber as bigint });
       parsed.push({
-        metadataCid,
+        cid,
         name,
         owner,
         blockNumber: Number(log.blockNumber),
