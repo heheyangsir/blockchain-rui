@@ -146,7 +146,7 @@ const fetchCredentials = async () => {
       const evt = decodeEventLog({ abi: CredentialRegistryAbi, eventName: 'CredentialStored', data: log.data, topics: log.topics }) as {
         args: { cid: string; name: string; owner: Address };
       };
-      if (!evt.args) continue;
+      if (!evt.args || !evt.args.cid || !evt.args.owner) continue;
       const { cid, name, owner } = evt.args;
       if (owner.toLowerCase() !== currentAddress.value.toLowerCase()) continue;
 
