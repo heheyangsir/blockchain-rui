@@ -78,7 +78,7 @@
 
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { createWalletClient, createPublicClient, http, custom } from 'viem'
 import { hardhat } from 'viem/chains'
 import { CredentialRegistryAbi } from '../../../../abi/CredentialRegistry'
@@ -201,7 +201,7 @@ const locateCredential = async () => {
 }
 
 const markExpired = async () => {
-  if (!walletClient.value || !targetIndex.value || !targetCredential.value) return
+  // if (!walletClient.value || !targetIndex.value || !targetCredential.value) return
   error.value = ''
   success.value = ''
 
@@ -236,4 +236,6 @@ const markExpired = async () => {
     error.value = err.message || '操作失败'
   }
 }
+
+onMounted(connect)
 </script>
