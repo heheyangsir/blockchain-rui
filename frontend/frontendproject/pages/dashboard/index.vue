@@ -24,8 +24,8 @@
             <div class="flex items-center justify-between flex-wrap">
               <!-- 左侧信息 -->
               <div>
-                <h2 class="text-xl font-semibold mb-1">当前钱包地址</h2>
-                <p class="font-mono text-blue-600">{{ formattedAddress }}</p>
+                <h2 class="text-xl font-semibold mb-1">你好 {{ accountName }}</h2>
+                <p class="text-gray-500">{{ formattedAddress }}</p>
               </div>
 
               <!-- 右侧按钮区域 -->
