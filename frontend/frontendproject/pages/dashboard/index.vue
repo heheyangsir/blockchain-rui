@@ -50,6 +50,26 @@
             </div>
           </div>
 
+
+          <div class="bg-yellow-100 rounded-2xl shadow-xl p-6" v-if="!accountName">
+            <div class="flex items-center justify-between flex-wrap">
+              <!-- 左侧信息 -->
+              <div>
+                <h2 class="text-xl font-semibold mb-1 ">为数字账户设置友好名称</h2>
+              </div>
+
+              <!-- 右侧按钮区域 -->
+              <div
+                class="flex flex-col space-y-4 sm:space-y-0 sm:space-x-4 sm:flex-row w-full sm:w-auto justify-end mt-4 sm:mt-0">
+                <!-- 刷新凭证日志按钮 -->
+                <button @click="router.push({ path: '/dashboard/VerifyCredential' })"
+                  class="px-4 py-2 bg-gradient-to-r bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow-md transition duration-300 w-full sm:w-auto flex items-center justify-center">
+                  去设置
+                </button>
+              </div>
+            </div>
+          </div>
+
           <div class="bg-white rounded-2xl shadow-xl p-6">
             <h2 class="text-xl font-semibold mb-4">📜 上链上传记录</h2>
             <div v-if="credentials.length === 0" class="text-gray-500">暂无凭证上传记录</div>
@@ -98,6 +118,7 @@ import { createPublicClient, createWalletClient, custom, http, encodeEventTopics
 import { CredentialRegistryAbi } from '../../../../abi/CredentialRegistry';
 import { networkInfo } from '../../stores/account';
 import type { Address } from 'viem';
+import { useRouter } from 'vue-router';
 
 interface CredentialLog {
   cid: string;
@@ -108,6 +129,7 @@ interface CredentialLog {
   txHash: string;
 }
 
+const router = useRouter();
 const accountStore = useAccountStore();
 const contractAddress = '0x5FbDB2315678afecb367f032d93F642f64180aa3' as Address;
 
@@ -122,6 +144,8 @@ const error = ref<string>('');
 const publicClient = createPublicClient({ chain: networkInfo.currentChain, transport: http(networkInfo.rpcUrl) });
 
 const formatTimestamp = (ts: number) => new Date(ts * 1000).toLocaleString();
+
+const accountName = ref<string | null>(null);
 
 const fetchCredentials = async () => {
   error.value = '';
@@ -203,7 +227,18 @@ watch(currentAddress, (newAddr) => {
   else credentials.value = [];
 });
 
-onMounted(() => {
+onMounted(async () => {
   if (currentAddress.value) fetchCredentials();
+
+  try {
+    accountName.value = await publicClient.readContract({
+      address: contractAddress,
+      abi: CredentialRegistryAbi,
+      functionName: 'getAccountName',
+      args: [currentAddress.value as `0x${string}`],
+    }) as string;
+  } catch (err) {
+    console.error('获取用户名称失败:', err);
+  }
 });
 </script>
