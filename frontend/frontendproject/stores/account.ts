@@ -65,9 +65,6 @@ export const useAccountStore = defineStore("account", {
       this._syncToStorage();
     },
 
-    /**
-     * 同步当前 state 到 localStorage
-     */
     _syncToStorage() {
       if (typeof window === "undefined") return;
       const payload: AccountState = {
