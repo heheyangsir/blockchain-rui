@@ -97,7 +97,8 @@
       <div v-if="selectedCredential" class="space-y-2 text-sm text-gray-700">
         <p><span class="font-medium">📁 CID：</span>{{ selectedCredential.cid }}</p>
         <p><span class="font-medium">📌 名称：</span>{{ selectedCredential.name }}</p>
-        <p><span class="font-medium">👤 拥有者：</span>{{ selectedCredential.owner }}</p>
+        <p><span class="font-medium">👤 拥有者昵称：</span>{{ accountName }}</p>
+        <p><span class="font-medium">🏠 拥有者地址：</span>{{ selectedCredential.owner }}</p>
         <p><span class="font-medium">🔗 交易哈希：</span>{{ selectedCredential.txHash }}</p>
         <p><span class="font-medium">📦 区块高度：</span>{{ selectedCredential.blockNumber }}</p>
         <p><span class="font-medium">🕒 上传时间：</span>{{ formatTimestamp(selectedCredential.blockTimestamp) }}</p>

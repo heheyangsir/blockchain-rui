@@ -18,20 +18,48 @@
           <Connector />
 
 
+        <!-- 查询方式选择按钮 -->
+        <div class="flex justify-between">
+          <button
+            @click="switchToQueryMode"
+            :class="isFileUploadMode ? 'bg-gray-300 text-gray-600' : 'bg-orange-500 text-white'"
+            class="w-full py-3 rounded-lg text-lg hover:bg-orange-600 transition shadow-md"
+          >
+            输入查询
+          </button>
+          <button
+            @click="switchToFileUploadMode"
+            :class="!isFileUploadMode ? 'bg-gray-300 text-gray-600' : 'bg-orange-500 text-white'"
+            class="w-full py-3 rounded-lg text-lg hover:bg-orange-600 transition shadow-md"
+          >
+            文件上传查询
+          </button>
+        </div>
+
         <!-- 查询框 -->
-        <div class="bg-white rounded-2xl shadow-md p-6 space-y-4">
+        <div v-if="!isFileUploadMode" class="bg-white rounded-2xl shadow-md p-6 space-y-4">
           <div>
             <label class="block text-sm text-gray-600 mb-1">查询内容</label>
             <input
               v-model="queryInput"
               @input="clear"
-              placeholder="📥 地址 / 文件 / 交易哈希 / 用户名"
+              placeholder="📥 地址 / 交易哈希 / 用户名"
               class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400 transition"
             />
           </div>
 
-          <!-- 文件上传框 -->
-          <div v-if="expectingFile">
+          <button
+            @click="handleQuery"
+            :disabled="loading"
+            class="w-full bg-orange-500 text-white py-3 rounded-lg text-lg hover:bg-orange-600 transition shadow-md"
+          >
+            {{ loading ? '查询中...' : '🚀 开始查询' }}
+          </button>
+        </div>
+
+        <!-- 文件上传框 -->
+        <div v-if="isFileUploadMode" class="bg-white rounded-2xl shadow-md p-6 space-y-4">
+          <div>
             <label class="block text-sm text-gray-600 mb-1">📎 选择文件</label>
             <input
               type="file"
@@ -63,7 +91,10 @@
               <div class="font-medium">🧬 CID</div>
               <div class="truncate text-blue-600">{{ cred.cid }}</div>
 
-              <div class="font-medium">🧑‍💼 持有者</div>
+              <div class="font-medium">🧑‍💼 持有者昵称</div>
+              <div class="truncate text-blue-600">{{ cred.ownerName }}</div>
+
+              <div class="font-medium">🏠 持有者地址</div>
               <div class="truncate text-blue-600">{{ cred.owner }}</div>
 
               <div class="font-medium">✅ 认证等级</div>
@@ -127,6 +158,7 @@ const publicClient = createPublicClient({ chain: hardhat, transport: http() })
 const addresses = ref<string[]>([])
 const walletClient = ref<any>(null)
 const isConnected = ref(false)
+const accountName = ref<string | null>(null);
 
 const queryInput = ref('')
 const fileData = ref<File | null>(null)
@@ -134,6 +166,17 @@ const expectingFile = ref(false)
 const results = ref<any[]>([])
 const error = ref('')
 const loading = ref(false)
+const isFileUploadMode = ref(false)
+
+const switchToQueryMode = () => {
+  isFileUploadMode.value = false
+  queryInput.value = ''  // 清空输入框内容
+}
+
+const switchToFileUploadMode = () => {
+  isFileUploadMode.value = true
+  fileData.value = null  // 清空已选择的文件
+}
 
 const formattedAddress = computed(() => {
   return addresses.value[0] ? `${addresses.value[0].slice(0, 8)}...${addresses.value[0].slice(-6)}` : '';
@@ -145,6 +188,9 @@ const connect = async () => {
   walletClient.value = createWalletClient({ chain: hardhat, transport: custom(ethereum) })
   addresses.value = await walletClient.value.requestAddresses()
   isConnected.value = addresses.value.length > 0
+  if (isConnected.value) {
+    await fetchAccountName()
+  }
 }
 
 const clear = () => {
@@ -166,7 +212,7 @@ const handleQuery = async () => {
   try {
     const input = queryInput.value.trim()
 
-    if (input.toLowerCase() === 'file') {
+    if (input.toLowerCase() === 'file' || fileData.value) {
       if (!fileData.value) throw new Error('请先选择文件')
       const form = new FormData()
       form.append('file', fileData.value)
@@ -249,6 +295,7 @@ const handleQuery = async () => {
       if (!creds.length) throw new Error('该用户名称下无凭证')
       results.value = creds
     }
+    await fetchNamesForResults()
 
   } catch (err: any) {
     error.value = err.message || '查询失败'
@@ -263,6 +310,24 @@ const formatCertification = (level: number) => {
     case 1: return '他人认证'
     case 2: return '官方认证'
     default: return '未知'
+  }
+}
+
+const fetchNamesForResults = async () => {
+  for (const cred of results.value) {
+    try {
+      const name = await publicClient.readContract({
+        address: contractAddress,
+        abi: CredentialRegistryAbi,
+        functionName: 'getAccountName',
+        args: [cred.owner as `0x${string}`],
+      }) as string
+      cred.ownerName = name
+      console.log(`Fetched owner name for ${cred.owner}: ${cred.ownerName}`)
+    } catch {
+      cred.ownerName = '未命名账户'
+      console.log(`Failed to fetch owner name for ${cred.owner}`)
+    }
   }
 }
 </script>
