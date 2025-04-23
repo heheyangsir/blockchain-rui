@@ -13,15 +13,35 @@
         <!-- 钱包连接 -->
         <Connector />
 
+        <div class="flex justify-between">
+          <button @click="switchToQueryMode"
+            :class="isFileUploadMode ? 'bg-gray-200 text-gray-700' : 'bg-purple-500 text-white'"
+            class="w-full py-3 rounded-lg text-lg hover:bg-purple-600 transition shadow-md">
+            输入查询
+          </button>
+          <button @click="switchToFileUploadMode"
+            :class="!isFileUploadMode ? 'bg-gray-200 text-gray-700' : 'bg-purple-500 text-white'"
+            class="w-full py-3 rounded-lg text-lg hover:bg-purple-600 transition shadow-md">
+            文件上传查询
+          </button>
+        </div>
+
         <!-- 查询输入 -->
-        <section class="bg-white p-8 rounded-2xl shadow-xl border border-gray-200 space-y-6 mt-8">
+        <div v-if="!isFileUploadMode" class="bg-white p-8 rounded-2xl shadow-xl border border-gray-200 space-y-6 mt-8">
           <div>
             <label class="block text-gray-700 font-semibold mb-2">🔍 凭证标识符</label>
             <input v-model="queryInput" @input="clear" placeholder="交易哈希 / 文件上传"
               class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition" />
           </div>
 
-          <div v-if="expectingFile">
+          <button @click="locateCredential" :disabled="loading" class="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 
+                   text-white text-lg font-semibold py-3 rounded-xl shadow-md transition duration-300">
+            {{ loading ? '⏳ 正在解析...' : '🎯 定位凭证' }}
+          </button>
+        </div>
+
+        <div v-if="isFileUploadMode" class="bg-white p-8 rounded-2xl shadow-xl border border-gray-200 space-y-6 mt-8">
+          <div v-if="isFileUploadMode">
             <label class="block text-gray-700 font-semibold mb-2">📎 上传原始文件</label>
             <input type="file" @change="handleFileChange" class="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-sm 
                      file:mr-4 file:py-2 file:px-4 file:rounded-full 
@@ -33,20 +53,20 @@
                    text-white text-lg font-semibold py-3 rounded-xl shadow-md transition duration-300">
             {{ loading ? '⏳ 正在解析...' : '🎯 定位凭证' }}
           </button>
-        </section>
+        </div>
 
         <!-- 凭证信息 -->
         <section v-if="targetCredential"
           class="bg-white p-8 rounded-2xl shadow-xl border border-gray-200 space-y-4 mt-8 text-sm">
           <div class="grid grid-cols-2 gap-4">
-            <div class="font-semibold">📛 名称</div>
+            <div class="font-semibold">📌 名称</div>
             <div>{{ targetCredential.name }}</div>
 
-            <div class="font-semibold">👤 持有者</div>
-            <div class="text-blue-600 truncate">{{ targetCredential.owner }}</div>
+            <div class="font-semibold">拥有者昵称</div>
+            <div class="text-blue-600 truncate">{{ targetCredential.ownerName }}</div>
 
-            <div class="font-semibold">✅ 认证人</div>
-            <div class="text-blue-600 truncate">{{ targetCredential.certifiedBy }}</div>
+            <div class="font-semibold">🔑 认证人昵称</div>
+            <div class="text-blue-600 truncate">{{ targetCredential.certifierName }}</div>
 
             <div class="font-semibold">📅 是否失效</div>
             <div class="text-red-600">{{ targetCredential.expired ? '是' : '否' }}</div>
@@ -76,9 +96,8 @@
   </div>
 </template>
 
-
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { createWalletClient, createPublicClient, http, custom } from 'viem'
 import { hardhat } from 'viem/chains'
 import { CredentialRegistryAbi } from '../../../../abi/CredentialRegistry'
@@ -99,10 +118,7 @@ const loading = ref(false)
 
 const targetIndex = ref<bigint | null>(null)
 const targetCredential = ref<any>(null)
-
-const formattedAddress = computed(() => {
-  return addresses.value[0] ? `${addresses.value[0].slice(0, 8)}...${addresses.value[0].slice(-6)}` : '';
-});
+const isFileUploadMode = ref(false)
 
 const connect = async () => {
   const ethereum = (window as any).ethereum
@@ -123,6 +139,16 @@ const handleFileChange = (e: Event) => {
   fileData.value = input.files?.[0] || null
 }
 
+const switchToQueryMode = () => {
+  isFileUploadMode.value = false
+  queryInput.value = ''
+}
+
+const switchToFileUploadMode = () => {
+  isFileUploadMode.value = true
+  fileData.value = null
+}
+
 const locateCredential = async () => {
   error.value = ''
   targetIndex.value = null
@@ -132,7 +158,7 @@ const locateCredential = async () => {
   try {
     const input = queryInput.value.trim()
 
-    if (input.toLowerCase() === 'file') {
+    if (input.toLowerCase() === 'file' || fileData.value) {
       if (!fileData.value) throw new Error('请上传文件')
       const form = new FormData()
       form.append('file', fileData.value)
@@ -161,6 +187,25 @@ const locateCredential = async () => {
         if (meta.fileCid === fileCid) {
           targetIndex.value = BigInt(i)
           targetCredential.value = cred
+
+          // 获取持有者昵称
+          const ownerName = await publicClient.readContract({
+            address: contractAddress,
+            abi: CredentialRegistryAbi,
+            functionName: 'getAccountName',
+            args: [cred.owner as `0x${string}`],
+          }) as string
+          cred.ownerName = ownerName
+
+          // 获取认证人昵称
+          const certifierName = await publicClient.readContract({
+            address: contractAddress,
+            abi: CredentialRegistryAbi,
+            functionName: 'getAccountName',
+            args: [cred.certifiedBy as `0x${string}`],
+          }) as string
+          cred.certifierName = certifierName
+
           break
         }
       }
@@ -188,6 +233,24 @@ const locateCredential = async () => {
       })
       targetIndex.value = index
       targetCredential.value = cred
+
+      // 获取持有者昵称
+      const ownerName = await publicClient.readContract({
+        address: contractAddress,
+        abi: CredentialRegistryAbi,
+        functionName: 'getAccountName',
+        args: [cred.owner as `0x${string}`],
+      }) as string
+      cred.ownerName = ownerName
+
+      // 获取认证人昵称
+      const certifierName = await publicClient.readContract({
+        address: contractAddress,
+        abi: CredentialRegistryAbi,
+        functionName: 'getAccountName',
+        args: [cred.certifiedBy as `0x${string}`],
+      }) as string
+      cred.certifierName = certifierName
     }
 
     else {

@@ -15,23 +15,18 @@
         </div>
 
         <!-- 连接钱包组件 -->
-          <Connector />
-
+        <Connector />
 
         <!-- 查询方式选择按钮 -->
         <div class="flex justify-between">
-          <button
-            @click="switchToQueryMode"
+          <button @click="switchToQueryMode"
             :class="isFileUploadMode ? 'bg-gray-300 text-gray-600' : 'bg-orange-500 text-white'"
-            class="w-full py-3 rounded-lg text-lg hover:bg-orange-600 transition shadow-md"
-          >
+            class="w-full py-3 rounded-lg text-lg hover:bg-orange-600 transition shadow-md">
             输入查询
           </button>
-          <button
-            @click="switchToFileUploadMode"
+          <button @click="switchToFileUploadMode"
             :class="!isFileUploadMode ? 'bg-gray-300 text-gray-600' : 'bg-orange-500 text-white'"
-            class="w-full py-3 rounded-lg text-lg hover:bg-orange-600 transition shadow-md"
-          >
+            class="w-full py-3 rounded-lg text-lg hover:bg-orange-600 transition shadow-md">
             文件上传查询
           </button>
         </div>
@@ -40,19 +35,12 @@
         <div v-if="!isFileUploadMode" class="bg-white rounded-2xl shadow-md p-6 space-y-4">
           <div>
             <label class="block text-sm text-gray-600 mb-1">查询内容</label>
-            <input
-              v-model="queryInput"
-              @input="clear"
-              placeholder="📥 地址 / 交易哈希 / 用户名"
-              class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400 transition"
-            />
+            <input v-model="queryInput" @input="clear" placeholder="📥 地址 / 交易哈希 / 用户名"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400 transition" />
           </div>
 
-          <button
-            @click="handleQuery"
-            :disabled="loading"
-            class="w-full bg-orange-500 text-white py-3 rounded-lg text-lg hover:bg-orange-600 transition shadow-md"
-          >
+          <button @click="handleQuery" :disabled="loading"
+            class="w-full bg-orange-500 text-white py-3 rounded-lg text-lg hover:bg-orange-600 transition shadow-md">
             {{ loading ? '查询中...' : '🚀 开始查询' }}
           </button>
         </div>
@@ -61,47 +49,43 @@
         <div v-if="isFileUploadMode" class="bg-white rounded-2xl shadow-md p-6 space-y-4">
           <div>
             <label class="block text-sm text-gray-600 mb-1">📎 选择文件</label>
-            <input
-              type="file"
-              @change="handleFileChange"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 transition"
-            />
+            <input type="file" @change="handleFileChange" class="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-sm 
+                     file:mr-4 file:py-2 file:px-4 file:rounded-full 
+                     file:border-0 file:bg-blue-600 file:text-white 
+                     hover:file:bg-blue-700 transition" />
           </div>
 
-          <button
-            @click="handleQuery"
-            :disabled="loading"
-            class="w-full bg-orange-500 text-white py-3 rounded-lg text-lg hover:bg-orange-600 transition shadow-md"
-          >
+          <button @click="handleQuery" :disabled="loading"
+            class="w-full bg-orange-500 text-white py-3 rounded-lg text-lg hover:bg-orange-600 transition shadow-md">
             {{ loading ? '查询中...' : '🚀 开始查询' }}
           </button>
         </div>
 
         <!-- 查询结果 -->
         <div v-if="results.length" class="space-y-6">
-          <div
-            v-for="(cred, index) in results"
-            :key="index"
-            class="bg-white border-l-4 border-orange-400 p-5 rounded-xl shadow-md"
-          >
+          <div v-for="(cred, index) in results" :key="index"
+            class="bg-white border-l-4 border-orange-400 p-5 rounded-xl shadow-md">
             <div class="grid grid-cols-2 gap-4 text-sm text-gray-700">
-              <div class="font-medium">📛 名称</div>
+              <div class="font-medium">📌 名称</div>
               <div>{{ cred.name }}</div>
 
-              <div class="font-medium">🧬 CID</div>
+              <div class="font-medium">📁 CID</div>
               <div class="truncate text-blue-600">{{ cred.cid }}</div>
 
-              <div class="font-medium">🧑‍💼 持有者昵称</div>
+              <div class="font-medium">👤 拥有者昵称</div>
               <div class="truncate text-blue-600">{{ cred.ownerName }}</div>
 
-              <div class="font-medium">🏠 持有者地址</div>
-              <div class="truncate text-blue-600">{{ cred.owner }}</div>
+              <!-- <div class="font-medium">🏠 持有者地址</div>
+              <div class="truncate text-blue-600">{{ cred.owner }}</div> -->
 
               <div class="font-medium">✅ 认证等级</div>
               <div class="capitalize">{{ formatCertification(cred.certification) }}</div>
 
-              <div class="font-medium">🔏 认证人</div>
-              <div class="truncate text-blue-600">{{ cred.certifiedBy }}</div>
+              <div class="font-medium">🔑 认证人昵称</div>
+              <div class="truncate text-blue-600">{{ cred.certifierName || '未命名认证人' }}</div>
+
+              <!-- <div class="font-medium">🔏 认证人</div>
+              <div class="truncate text-blue-600">{{ cred.certifiedBy }}</div> -->
 
               <div class="font-medium">⛔ 是否失效</div>
               <div :class="cred.expired ? 'text-red-500' : 'text-green-600'">
@@ -118,25 +102,10 @@
 
         <!-- 加载状态 -->
         <div v-if="loading" class="flex justify-center mt-4">
-          <svg
-            class="animate-spin h-8 w-8 text-orange-600"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              class="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              stroke-width="4"
-            />
-            <path
-              class="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8v8z"
-            />
+          <svg class="animate-spin h-8 w-8 text-orange-600" xmlns="http://www.w3.org/2000/svg" fill="none"
+            viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
           </svg>
         </div>
 
@@ -147,18 +116,13 @@
 
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { createPublicClient, createWalletClient, custom, http } from 'viem'
+import { ref } from 'vue'
+import { createPublicClient, http } from 'viem'
 import { CredentialRegistryAbi } from '../../../../abi/CredentialRegistry'
 import { hardhat } from 'viem/chains'
 
 const contractAddress = '0x5FbDB2315678afecb367f032d93F642f64180aa3'
 const publicClient = createPublicClient({ chain: hardhat, transport: http() })
-
-const addresses = ref<string[]>([])
-const walletClient = ref<any>(null)
-const isConnected = ref(false)
-const accountName = ref<string | null>(null);
 
 const queryInput = ref('')
 const fileData = ref<File | null>(null)
@@ -170,27 +134,12 @@ const isFileUploadMode = ref(false)
 
 const switchToQueryMode = () => {
   isFileUploadMode.value = false
-  queryInput.value = ''  // 清空输入框内容
+  queryInput.value = ''
 }
 
 const switchToFileUploadMode = () => {
   isFileUploadMode.value = true
-  fileData.value = null  // 清空已选择的文件
-}
-
-const formattedAddress = computed(() => {
-  return addresses.value[0] ? `${addresses.value[0].slice(0, 8)}...${addresses.value[0].slice(-6)}` : '';
-});
-
-const connect = async () => {
-  const ethereum = (window as any).ethereum
-  if (!ethereum) return
-  walletClient.value = createWalletClient({ chain: hardhat, transport: custom(ethereum) })
-  addresses.value = await walletClient.value.requestAddresses()
-  isConnected.value = addresses.value.length > 0
-  if (isConnected.value) {
-    await fetchAccountName()
-  }
+  fileData.value = null
 }
 
 const clear = () => {
@@ -324,8 +273,18 @@ const fetchNamesForResults = async () => {
       }) as string
       cred.ownerName = name
       console.log(`Fetched owner name for ${cred.owner}: ${cred.ownerName}`)
+
+      const certifierName = await publicClient.readContract({
+        address: contractAddress,
+        abi: CredentialRegistryAbi,
+        functionName: 'getAccountName',
+        args: [cred.certifiedBy as `0x${string}`],
+      }) as string
+      cred.certifierName = certifierName
+      console.log(`Fetched certifier name for ${cred.certifiedBy}: ${cred.certifierName}`)
     } catch {
       cred.ownerName = '未命名账户'
+      cred.certifierName = '未命名账户'
       console.log(`Failed to fetch owner name for ${cred.owner}`)
     }
   }

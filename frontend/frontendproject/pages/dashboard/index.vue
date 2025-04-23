@@ -95,17 +95,38 @@
         <button @click="closeModal" class="text-gray-500 hover:text-gray-700 text-xl">&times;</button>
       </div>
       <div v-if="selectedCredential" class="space-y-2 text-sm text-gray-700">
-        <p><span class="font-medium">📁 CID：</span>{{ selectedCredential.cid }}</p>
+        <!-- 一、凭证基础信息 -->
+        <p class="font-semibold text-md">一、凭证基础信息</p>
         <p><span class="font-medium">📌 名称：</span>{{ selectedCredential.name }}</p>
-        <p><span class="font-medium">👤 拥有者昵称：</span>{{ accountName }}</p>
+        <p><span class="font-medium">📁 CID：</span>{{ selectedCredential.cid }}</p>
+        <p><span class="font-medium">🕒 上传时间：</span>{{ formatTimestamp(selectedCredential.blockTimestamp) }}</p>
+
+        <!-- 二、拥有者信息 -->
+        <p class="font-semibold text-md">二、拥有者信息</p>
+        <p><span class="font-medium">👤 拥有者昵称：</span>{{ ownerName || selectedCredential.owner }}</p>
         <p><span class="font-medium">🏠 拥有者地址：</span>{{ selectedCredential.owner }}</p>
+
+        <!-- 三、认证信息 -->
+        <p class="font-semibold text-md">三、认证信息</p>
+        <p><span class="font-medium">🔑 认证人昵称：</span>{{ certifierName || selectedCredential.certifiedBy }}</p>
+        <p><span class="font-medium">🔏 认证人：</span>{{ selectedCredential.certifiedBy }}</p>
+        <p>
+          <span class="font-medium">✅ 认证等级：</span>
+          {{ formatCertification(selectedCredential.certification) }}
+        </p>
+
+        <!-- 四、区块链相关信息 -->
+        <p class="font-semibold text-md">四、区块链相关信息</p>
         <p><span class="font-medium">🔗 交易哈希：</span>{{ selectedCredential.txHash }}</p>
         <p><span class="font-medium">📦 区块高度：</span>{{ selectedCredential.blockNumber }}</p>
-        <p><span class="font-medium">🕒 上传时间：</span>{{ formatTimestamp(selectedCredential.blockTimestamp) }}</p>
+
+        <!-- 五、凭证状态 -->
+        <p class="font-semibold text-md">五、凭证状态</p>
         <p>
           <span class="font-medium">⛔ 是否失效：</span>
-          <span :class="selectedCredential.expired ? 'text-red-500' : 'text-green-600'">{{ selectedCredential.expired ?
-            '是' : '否' }}</span>
+          <span :class="selectedCredential.expired ? 'text-red-500' : 'text-green-600'">
+            {{ selectedCredential.expired ? '是' : '否' }}
+          </span>
         </p>
       </div>
     </div>
@@ -137,7 +158,12 @@ interface CredentialLog {
   blockTimestamp: number;
   txHash: string;
   expired: boolean;
+  certifiedBy: Address;
+  certification: number;
 }
+
+const ownerName = ref<string | null>(null);
+const certifierName = ref<string | null>(null);
 
 // 路由、状态管理
 const router = useRouter();
@@ -161,9 +187,12 @@ const error = ref<string>('');
 // 弹窗逻辑
 const selectedCredential = ref<CredentialLog | null>(null);
 const showModal = ref(false);
-const openModal = (cred: CredentialLog) => {
+const openModal = async (cred: CredentialLog) => {
   selectedCredential.value = cred;
   showModal.value = true;
+
+  ownerName.value = await getAccountName(cred.owner);
+  certifierName.value = await getAccountName(cred.certifiedBy);
 };
 const closeModal = () => {
   showModal.value = false;
@@ -172,6 +201,19 @@ const closeModal = () => {
 
 // 时间格式化
 const formatTimestamp = (ts: number) => new Date(ts * 1000).toLocaleString();
+
+const getAccountName = async (address: Address): Promise<string | null> => {
+  try {
+    return await publicClient.readContract({
+      address: contractAddress,
+      abi: CredentialRegistryAbi,
+      functionName: 'getAccountName',
+      args: [address],
+    }) as string;
+  } catch {
+    return null;
+  }
+};
 
 // 拉取凭证
 const fetchCredentials = async () => {
@@ -212,6 +254,8 @@ const fetchCredentials = async () => {
         blockTimestamp: Number(block.timestamp),
         txHash: log.transactionHash as string,
         expired: credOnChain.expired,  // 来自链上数据
+        certifiedBy: credOnChain.certifiedBy,
+        certification: credOnChain.certification,
       });
     }
 
@@ -261,4 +305,13 @@ onMounted(async () => {
     // 忽略错误
   }
 });
+
+const formatCertification = (level: number) => {
+  switch (level) {
+    case 0: return '未认证'
+    case 1: return '他人认证'
+    case 2: return '官方认证'
+    default: return '未知'
+  }
+}
 </script>
