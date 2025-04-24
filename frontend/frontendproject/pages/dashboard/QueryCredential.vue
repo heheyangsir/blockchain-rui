@@ -1,9 +1,9 @@
 <template>
   <div class="h-screen bg-gradient-to-b from-orange-50 to-gray-200 flex flex-col">
     <AppHeader />
-    <div class="flex-1 overflow-y-auto mt-16 p-6">
-      <div class="max-w-4xl mx-auto space-y-10">
 
+    <main class="flex-1 overflow-y-auto pt-24 pb-16">
+      <div class="max-w-5xl w-full mx-auto px-6 space-y-10">
         <!-- 顶部标题 -->
         <div class="text-center">
           <h1 class="text-4xl font-bold text-gray-800 flex items-center justify-center gap-2">
@@ -18,7 +18,7 @@
         <Connector />
 
         <!-- 查询方式选择按钮 -->
-        <div class="flex justify-between">
+        <div class="flex justify-between gap-4">
           <button @click="switchToQueryMode"
             :class="isFileUploadMode ? 'bg-gray-300 text-gray-600' : 'bg-orange-500 text-white'"
             class="w-full py-3 rounded-lg text-lg hover:bg-orange-600 transition shadow-md">
@@ -31,62 +31,46 @@
           </button>
         </div>
 
-        <!-- 查询框 -->
-        <div v-if="!isFileUploadMode" class="bg-white rounded-2xl shadow-md p-6 space-y-4">
-          <div>
-            <label class="block text-sm text-gray-600 mb-1">查询内容</label>
-            <input v-model="queryInput" @input="clear" placeholder="📥 地址 / 交易哈希 / 用户名"
-              class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400 transition" />
-          </div>
-
+        <!-- 输入查询表单 -->
+        <section v-if="!isFileUploadMode" class="bg-white p-8 rounded-2xl shadow-xl border border-gray-200 space-y-4">
+          <label class="block text-sm text-gray-600 mb-1">查询内容</label>
+          <input v-model="queryInput" @input="clear" placeholder="📥 地址 / 交易哈希 / 用户名"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400 transition" />
           <button @click="handleQuery" :disabled="loading"
             class="w-full bg-orange-500 text-white py-3 rounded-lg text-lg hover:bg-orange-600 transition shadow-md">
             {{ loading ? '查询中...' : '🚀 开始查询' }}
           </button>
-        </div>
+        </section>
 
-        <!-- 文件上传框 -->
-        <div v-if="isFileUploadMode" class="bg-white rounded-2xl shadow-md p-6 space-y-4">
-          <div>
-            <label class="block text-sm text-gray-600 mb-1">📎 选择文件</label>
-            <input type="file" @change="handleFileChange" class="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-sm 
-                     file:mr-4 file:py-2 file:px-4 file:rounded-full 
-                     file:border-0 file:bg-blue-600 file:text-white 
-                     hover:file:bg-blue-700 transition" />
-          </div>
-
+        <!-- 文件上传查询表单 -->
+        <section v-if="isFileUploadMode" class="bg-white p-8 rounded-2xl shadow-xl border border-gray-200 space-y-4">
+          <label class="block text-sm text-gray-600 mb-1">📎 选择文件</label>
+          <input type="file" @change="handleFileChange"
+            class="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-sm 
+                   file:mr-4 file:py-2 file:px-4 file:rounded-full 
+                   file:border-0 file:bg-blue-600 file:text-white 
+                   hover:file:bg-blue-700 transition" />
           <button @click="handleQuery" :disabled="loading"
             class="w-full bg-orange-500 text-white py-3 rounded-lg text-lg hover:bg-orange-600 transition shadow-md">
             {{ loading ? '查询中...' : '🚀 开始查询' }}
           </button>
-        </div>
+        </section>
 
-        <!-- 查询结果 -->
+        <!-- 查询结果展示 -->
         <div v-if="results.length" class="space-y-6">
           <div v-for="(cred, index) in results" :key="index"
-            class="bg-white border-l-4 border-orange-400 p-5 rounded-xl shadow-md">
+            class="bg-white border-l-4 border-orange-400 p-6 rounded-2xl shadow-md">
             <div class="grid grid-cols-2 gap-4 text-sm text-gray-700">
               <div class="font-medium">📌 名称</div>
               <div>{{ cred.name }}</div>
-
               <div class="font-medium">📁 CID</div>
               <div class="truncate text-blue-600">{{ cred.cid }}</div>
-
               <div class="font-medium">👤 拥有者昵称</div>
               <div class="truncate text-blue-600">{{ cred.ownerName }}</div>
-
-              <!-- <div class="font-medium">🏠 持有者地址</div>
-              <div class="truncate text-blue-600">{{ cred.owner }}</div> -->
-
               <div class="font-medium">✅ 认证等级</div>
               <div class="capitalize">{{ formatCertification(cred.certification) }}</div>
-
               <div class="font-medium">🔑 认证人昵称</div>
               <div class="truncate text-blue-600">{{ cred.certifierName || '未命名认证人' }}</div>
-
-              <!-- <div class="font-medium">🔏 认证人</div>
-              <div class="truncate text-blue-600">{{ cred.certifiedBy }}</div> -->
-
               <div class="font-medium">⛔ 是否失效</div>
               <div :class="cred.expired ? 'text-red-500' : 'text-green-600'">
                 {{ cred.expired ? '是' : '否' }}
@@ -96,21 +80,20 @@
         </div>
 
         <!-- 错误提示 -->
-        <div v-if="error" class="bg-red-100 border border-red-400 rounded p-4 text-red-700 mt-4">
+        <p v-if="error" class="bg-red-100 border border-red-400 rounded p-4 text-red-700 text-sm text-center shadow">
           ⚠️ {{ error }}
-        </div>
+        </p>
 
         <!-- 加载状态 -->
-        <div v-if="loading" class="flex justify-center mt-4">
+        <div v-if="loading" class="flex justify-center">
           <svg class="animate-spin h-8 w-8 text-orange-600" xmlns="http://www.w3.org/2000/svg" fill="none"
             viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
           </svg>
         </div>
-
       </div>
-    </div>
+    </main>
   </div>
 </template>
 

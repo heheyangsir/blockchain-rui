@@ -1,8 +1,9 @@
 <template>
-  <div class="h-screen bg-gradient-to-b from-orange-50 to-gray-200 flex flex-col relative">
+  <div class="h-screen bg-gradient-to-b from-orange-50 to-gray-200 flex flex-col">
     <AppHeader />
-    <div class="flex-1 overflow-y-auto p-4 mt-16">
-      <div class="max-w-5xl mx-auto space-y-6">
+
+    <main class="flex-1 overflow-y-auto pt-24 pb-16">
+      <div class="max-w-5xl w-full mx-auto px-6 space-y-10">
         <!-- 页面标题 -->
         <div class="text-center">
           <h1 class="text-4xl font-extrabold text-gray-800 mb-2">📄 凭证管理首页</h1>
@@ -23,7 +24,7 @@
 
         <!-- 已连接钱包内容 -->
         <div v-else class="space-y-6">
-          <!-- 用户信息 & 操作按钮 -->
+          <!-- 用户信息卡片 -->
           <div class="bg-white rounded-2xl shadow-xl p-6">
             <div class="flex flex-wrap items-center justify-between">
               <div>
@@ -35,15 +36,11 @@
                   class="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg shadow-md transition duration-300 w-full sm:w-auto">
                   🔄 刷新凭证日志
                 </button>
-                <button @click="disconnectWallet"
-                  class="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg shadow-md transition duration-300 w-full sm:w-auto">
-                  断开钱包
-                </button>
               </div>
             </div>
           </div>
 
-          <!-- 设置账户名称 -->
+          <!-- 设置账户名提示 -->
           <div v-if="!accountName" class="bg-yellow-100 rounded-2xl shadow-xl p-6">
             <div class="flex justify-between items-center flex-wrap">
               <h2 class="text-xl font-semibold mb-1">为数字账户设置友好名称</h2>
@@ -54,7 +51,7 @@
             </div>
           </div>
 
-          <!-- 上链上传记录 -->
+          <!-- 凭证列表卡片 -->
           <div class="bg-white rounded-2xl shadow-xl p-6">
             <h2 class="text-xl font-semibold mb-4">📜 上链上传记录</h2>
             <div v-if="credentials.length === 0" class="text-gray-500">暂无凭证上传记录</div>
@@ -78,61 +75,55 @@
             </div>
           </div>
 
-          <!-- 错误提示 -->
+          <!-- 错误信息 -->
           <div v-if="error" class="mt-6 bg-red-100 border border-red-400 rounded-xl p-4 text-red-700 text-sm">
             ⚠️ {{ error }}
           </div>
         </div>
+
+        <!-- 详情弹出层 -->
+        <div
+          class="fixed left-0 top-20 bottom-20 w-[40rem] bg-white rounded-r-2xl shadow-2xl z-50 p-6 overflow-auto transform transition-transform"
+          :class="showModal ? 'translate-x-0' : '-translate-x-full'">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-gray-800">凭证详情</h3>
+            <button @click="closeModal" class="text-gray-500 hover:text-gray-700 text-xl">&times;</button>
+          </div>
+          <div v-if="selectedCredential" class="space-y-2 text-sm text-gray-700">
+            <p class="font-semibold text-md">一、凭证基础信息</p>
+            <p><span class="font-medium">📌 名称：</span>{{ selectedCredential.name }}</p>
+            <p><span class="font-medium">📁 CID：</span>{{ selectedCredential.cid }}</p>
+            <p><span class="font-medium">🕒 上传时间：</span>{{ formatTimestamp(selectedCredential.blockTimestamp) }}</p>
+
+            <p class="font-semibold text-md">二、拥有者信息</p>
+            <p><span class="font-medium">👤 拥有者昵称：</span>{{ ownerName || selectedCredential.owner }}</p>
+            <p><span class="font-medium">🏠 拥有者地址：</span>{{ selectedCredential.owner }}</p>
+
+            <p class="font-semibold text-md">三、认证信息</p>
+            <p><span class="font-medium">🔑 认证人昵称：</span>{{ certifierName || selectedCredential.certifiedBy }}</p>
+            <p><span class="font-medium">🔏 认证人：</span>{{ selectedCredential.certifiedBy }}</p>
+            <p>
+              <span class="font-medium">✅ 认证等级：</span>
+              {{ formatCertification(selectedCredential.certification) }}
+            </p>
+
+            <p class="font-semibold text-md">四、区块链相关信息</p>
+            <p><span class="font-medium">🔗 交易哈希：</span>{{ selectedCredential.txHash }}</p>
+            <p><span class="font-medium">📦 区块高度：</span>{{ selectedCredential.blockNumber }}</p>
+
+            <p class="font-semibold text-md">五、凭证状态</p>
+            <p>
+              <span class="font-medium">⛔ 是否失效：</span>
+              <span :class="selectedCredential.expired ? 'text-red-500' : 'text-green-600'">
+                {{ selectedCredential.expired ? '是' : '否' }}
+              </span>
+            </p>
+          </div>
+        </div>
       </div>
-    </div>
-
-    <!-- 左侧滑出详情面板（留空上、下边距） -->
-    <div
-      class="fixed left-0 top-20 bottom-20 w-[40rem] bg-white rounded-r-2xl shadow-2xl z-50 p-6 overflow-auto transform transition-transform"
-      :class="showModal ? 'translate-x-0' : '-translate-x-full'">
-      <div class="flex justify-between items-center mb-4">
-        <h3 class="text-lg font-semibold text-gray-800">凭证详情</h3>
-        <button @click="closeModal" class="text-gray-500 hover:text-gray-700 text-xl">&times;</button>
-      </div>
-      <div v-if="selectedCredential" class="space-y-2 text-sm text-gray-700">
-        <!-- 一、凭证基础信息 -->
-        <p class="font-semibold text-md">一、凭证基础信息</p>
-        <p><span class="font-medium">📌 名称：</span>{{ selectedCredential.name }}</p>
-        <p><span class="font-medium">📁 CID：</span>{{ selectedCredential.cid }}</p>
-        <p><span class="font-medium">🕒 上传时间：</span>{{ formatTimestamp(selectedCredential.blockTimestamp) }}</p>
-
-        <!-- 二、拥有者信息 -->
-        <p class="font-semibold text-md">二、拥有者信息</p>
-        <p><span class="font-medium">👤 拥有者昵称：</span>{{ ownerName || selectedCredential.owner }}</p>
-        <p><span class="font-medium">🏠 拥有者地址：</span>{{ selectedCredential.owner }}</p>
-
-        <!-- 三、认证信息 -->
-        <p class="font-semibold text-md">三、认证信息</p>
-        <p><span class="font-medium">🔑 认证人昵称：</span>{{ certifierName || selectedCredential.certifiedBy }}</p>
-        <p><span class="font-medium">🔏 认证人：</span>{{ selectedCredential.certifiedBy }}</p>
-        <p>
-          <span class="font-medium">✅ 认证等级：</span>
-          {{ formatCertification(selectedCredential.certification) }}
-        </p>
-
-        <!-- 四、区块链相关信息 -->
-        <p class="font-semibold text-md">四、区块链相关信息</p>
-        <p><span class="font-medium">🔗 交易哈希：</span>{{ selectedCredential.txHash }}</p>
-        <p><span class="font-medium">📦 区块高度：</span>{{ selectedCredential.blockNumber }}</p>
-
-        <!-- 五、凭证状态 -->
-        <p class="font-semibold text-md">五、凭证状态</p>
-        <p>
-          <span class="font-medium">⛔ 是否失效：</span>
-          <span :class="selectedCredential.expired ? 'text-red-500' : 'text-green-600'">
-            {{ selectedCredential.expired ? '是' : '否' }}
-          </span>
-        </p>
-      </div>
-    </div>
+    </main>
   </div>
 </template>
-
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
@@ -154,7 +145,7 @@ interface CredentialLog {
   cid: string;
   name: string;
   owner: Address;
-  blockNumber: number;
+
   blockTimestamp: number;
   txHash: string;
   expired: boolean;
@@ -235,8 +226,11 @@ const fetchCredentials = async () => {
       if (!evt.args?.cid || !evt.args?.owner) continue;
       if (evt.args.owner.toLowerCase() !== currentAddress.value.toLowerCase()) continue;
 
-      const id = Number(evt.args.id);  // 新增：提取 id
+      const id = Number(evt.args.id); // 新增：提取 id
       const block = await publicClient.getBlock({ blockNumber: log.blockNumber as bigint });
+
+      // 确保 block.timestamp 存在
+      const blockTimestamp = block.timestamp ? Number(block.timestamp) : Date.now() / 1000;
 
       // 读取链上 credential 获取 expired 状态
       const credOnChain = await publicClient.readContract({
@@ -251,9 +245,9 @@ const fetchCredentials = async () => {
         name: evt.args.name,
         owner: evt.args.owner,
         blockNumber: Number(log.blockNumber),
-        blockTimestamp: Number(block.timestamp),
+        blockTimestamp,
         txHash: log.transactionHash as string,
-        expired: credOnChain.expired,  // 来自链上数据
+        expired: credOnChain.expired, // 来自链上数据
         certifiedBy: credOnChain.certifiedBy,
         certification: credOnChain.certification,
       });
@@ -267,28 +261,35 @@ const fetchCredentials = async () => {
 
 // 钱包连接 & 断开
 const connectWallet = async () => {
-  try {
-    const ethereum = (window as any).ethereum;
-    if (!ethereum) throw new Error('请安装 MetaMask');
-    const walletClient = createWalletClient({ chain: networkInfo.currentChain, transport: custom(ethereum) });
-    const addrs = await walletClient.requestAddresses();
-    if (!addrs.length) throw new Error('未检测到地址');
-    accountStore.setAccountAddress(addrs[0]);
-    await fetchCredentials();
-  } catch (err: any) {
-    error.value = err.message;
-  }
+  // try {
+  //   const ethereum = (window as any).ethereum;
+  //   if (!ethereum) throw new Error('请安装 MetaMask');
+  //   const walletClient = createWalletClient({ chain: networkInfo.currentChain, transport: custom(ethereum) });
+  //   const addrs = await walletClient.requestAddresses();
+  //   if (!addrs.length) throw new Error('未检测到地址');
+  //   accountStore.setAccountAddress(addrs[0]);
+  //   await fetchCredentials();
+  // } catch (err: any) {
+  //   error.value = err.message;
+  // }
+  router.push({ path: '/auth/login' });
 };
 const disconnectWallet = () => {
   accountStore.disconnect();
   credentials.value = [];
+  accountName.value = null;
 };
 const refreshCredentials = fetchCredentials;
 
 // 监听地址变化
-watch(currentAddress, (newAddr) => {
+watch(currentAddress,async (newAddr) => {
   if (newAddr) fetchCredentials();
   else credentials.value = [];
+
+  accountName.value = await getAccountName(newAddr as `0x${string}`);
+  if (!accountName.value) {
+    accountName.value = null;
+  }
 });
 
 // 初始化

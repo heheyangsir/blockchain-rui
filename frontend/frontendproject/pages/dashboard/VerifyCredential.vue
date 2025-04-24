@@ -1,36 +1,31 @@
 <template>
   <div class="h-screen bg-gradient-to-b from-orange-50 to-gray-200 flex flex-col">
     <AppHeader />
-    <div class="flex-1 overflow-y-auto p-4 mt-16">
-      <div class="max-w-5xl mx-auto space-y-6">
+
+    <main class="flex-1 overflow-y-auto pt-24 pb-16">
+      <div class="max-w-5xl w-full mx-auto px-6 space-y-10">
+        <!-- 页面标题 -->
         <div class="text-center">
           <h1 class="text-4xl font-extrabold text-gray-800 mb-2">✅ 凭证认证平台</h1>
           <p class="text-lg text-gray-500">链上凭证的权威认证中心</p>
         </div>
 
-        <div v-if="!currentAddress" class="mb-12">
+        <!-- 钱包连接 -->
+        <div v-if="!currentAddress">
           <Connector />
         </div>
 
-        <div v-else class="space-y-6">
-          <!-- 当前账户 -->
-          <div class="bg-white rounded-2xl shadow-xl p-6">
-            <h2 class="text-xl font-semibold mb-2">👛 当前账户</h2>
-            <p class="font-mono text-blue-600">{{ formattedAddress }}</p>
-            <div v-if="!isAuthorized" class="mt-2 bg-red-100 border border-red-400 rounded p-2 text-red-700 text-sm">
-              ⚠️ 当前账户不是官方授权人，无法进行官方认证
-            </div>
-          </div>
+        <div v-else class="space-y-10">
+          <Connector />
 
           <!-- 设置账户名称 -->
-          <div class="bg-white rounded-2xl shadow-xl p-6">
+          <section class="bg-white p-8 rounded-2xl shadow-xl border border-gray-200">
             <h2 class="text-xl font-semibold mb-4">📝 设置账户名称</h2>
-            <label for="accountName" class="block text-gray-700 mb-2 text-sm">名称</label>
+            <label class="block text-gray-700 mb-2 text-sm">名称</label>
             <input 
-              id="accountName" 
               v-model="accountName" 
               placeholder="请输入名称"
-              class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring focus:ring-blue-300"
+              class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-300"
             />
             <div v-if="nameError" class="mt-1 text-red-500 text-sm">{{ nameError }}</div>
             <div v-if="nameSuccess" class="mt-2 bg-blue-100 border border-blue-400 rounded p-2 text-blue-700 text-sm">
@@ -38,21 +33,20 @@
             </div>
             <button 
               @click="setName"
-              class="mt-4 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg transition duration-200 text-sm"
+              class="mt-4 w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg transition text-sm"
             >
               设置名称
             </button>
-          </div>
+          </section>
 
           <!-- 添加官方认证人 -->
-          <div class="bg-white rounded-2xl shadow-xl p-6">
+          <section class="bg-white p-8 rounded-2xl shadow-xl border border-gray-200">
             <h2 class="text-xl font-semibold mb-4">🛡️ 添加官方认证人</h2>
-            <label for="authAddr" class="block text-gray-700 mb-2 text-sm">被授权地址</label>
+            <label class="block text-gray-700 mb-2 text-sm">被授权地址</label>
             <input 
-              id="authAddr" 
               v-model="authAddr" 
               placeholder="输入被授权地址"
-              class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring focus:ring-orange-300"
+              class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-300"
             />
             <div v-if="authAddrError" class="mt-1 text-red-500 text-sm">{{ authAddrError }}</div>
             <div v-if="authSuccess" class="mt-2 bg-orange-100 border border-orange-400 rounded p-2 text-orange-700 text-sm">
@@ -60,32 +54,30 @@
             </div>
             <button 
               @click="authorizeAccount"
-              class="mt-4 px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg transition duration-200 text-sm"
+              class="mt-4 w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg transition text-sm"
             >
               添加授权
             </button>
-          </div>
+          </section>
 
           <!-- 发起认证 -->
-          <div class="bg-white rounded-2xl shadow-xl p-6">
+          <section class="bg-white p-8 rounded-2xl shadow-xl border border-gray-200">
             <h2 class="text-xl font-semibold mb-4">🧾 发起凭证认证</h2>
-            <label for="txHash" class="block text-gray-700 mb-2 text-sm">交易哈希</label>
+            <label class="block text-gray-700 mb-2 text-sm">交易哈希</label>
             <input 
-              id="txHash" 
               v-model="txHash" 
               placeholder="输入交易哈希"
-              class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring focus:ring-green-300"
+              class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-300"
             />
             <div v-if="txHashError" class="mt-1 text-red-500 text-sm">{{ txHashError }}</div>
             <div v-if="txResult" class="mt-2 bg-green-100 border border-green-400 rounded p-2 text-green-700 text-sm">
               ✅ 交易成功：{{ txResult }}
             </div>
 
-            <label for="certificationLevel" class="block text-gray-700 mt-4 mb-2 text-sm">认证等级</label>
+            <label class="block text-gray-700 mt-4 mb-2 text-sm">认证等级</label>
             <select 
-              id="certificationLevel" 
               v-model="level" 
-              class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring focus:ring-green-300"
+              class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-300"
               :disabled="!isAuthorized && level === 2"
             >
               <option :value="1">Peer 认证（普通用户）</option>
@@ -94,18 +86,16 @@
 
             <button 
               @click="certify"
-              class="mt-4 px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg transition duration-200 text-sm"
+              class="mt-4 w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg transition text-sm"
             >
               提交认证
             </button>
-          </div>
+          </section>
         </div>
       </div>
-    </div>
+    </main>
   </div>
 </template>
-
-
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'nuxt/app';
