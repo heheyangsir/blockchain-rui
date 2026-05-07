@@ -1,68 +1,66 @@
 <template>
-  <nav class="fixed top-0 left-0 right-0 bg-gradient-to-r from-gray-800 to-gray-900 text-white shadow-md z-50">
-    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
-      <!-- 左侧内容：Logo + 菜单 -->
-      <div class="flex items-center space-x-6 flex-grow">
-        <h1 class="text-xl sm:text-2xl font-extrabold tracking-wide whitespace-nowrap">📘 凭证管理系统</h1>
-        <div class="hidden md:flex space-x-3 ml-6">
+  <nav class="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md border-b border-stone-200 shadow-sm z-50">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+      <!-- 左侧：Logo + 桌面菜单 -->
+      <div class="flex items-center space-x-4 flex-grow">
+        <div class="flex items-center gap-2 text-lg font-semibold text-stone-900 tracking-tight">
+          <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+          <span>凭证管理系统</span>
+        </div>
+        <div class="hidden md:flex items-center ml-4 space-x-1">
           <router-link v-for="item in menuItems" :key="item.path" :to="item.path"
-            class="text-sm px-4 py-2 rounded-lg font-medium hover:bg-purple-600 transition duration-200"
-            :class="{ 'bg-purple-600': isActive(item.path) }">
+            class="px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+            :class="isActive(item.path) ? 'bg-amber-50 text-amber-700' : 'text-stone-600 hover:bg-stone-50 hover:text-stone-900'">
             {{ item.title }}
           </router-link>
         </div>
       </div>
 
-      <!-- 汉堡按钮：小屏显示 -->
-      <button @click="toggleMobileMenu" class="md:hidden focus:outline-none ml-4">
-        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M4 6h16M4 12h16M4 18h16"/>
+      <!-- 汉堡按钮：移动端 -->
+      <button @click="toggleMobileMenu" class="md:hidden p-2 rounded-lg text-stone-600 hover:bg-stone-100 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
         </svg>
       </button>
 
-      <!-- 用户头像 -->
-      <div class="relative hidden md:block ml-6">
-        <div @click="toggleUserMenu"
-             class="cursor-pointer w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center p-1">
-          <img :src="user.avatar" alt="用户头像" class="w-full h-full object-cover rounded-full"/>
-        </div>
-        <div v-if="isUserMenuOpen"
-             class="absolute right-0 mt-2 w-48 bg-white text-gray-800 rounded-lg shadow-lg py-2 z-50">
-          <div class="px-4 py-2 text-sm border-b border-gray-200">
-            👋 {{ user.name }}
+      <!-- 用户菜单：桌面端 -->
+      <div class="relative hidden md:block ml-4">
+        <button @click="toggleUserMenu" class="cursor-pointer w-10 h-10 rounded-full overflow-hidden border border-stone-200 hover:border-stone-300 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2">
+          <img :src="user.avatar" alt="用户头像" class="w-full h-full object-cover"/>
+        </button>
+        <div v-if="isUserMenuOpen" class="absolute right-0 mt-3 w-56 bg-white border border-stone-200 text-stone-800 rounded-xl shadow-xl py-2 z-50">
+          <div class="px-4 py-3 border-b border-stone-100">
+            <p class="text-sm font-semibold text-stone-900">{{ user.name }}</p>
+            <p class="text-xs text-stone-500 mt-0.5">已登录</p>
           </div>
           <button @click="logout"
-                  class="w-full px-4 py-2 rounded-lg text-white font-semibold bg-gradient-to-r from-red-400 to-red-500 shadow-lg mt-2">
-            <span class="flex items-center justify-center">
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M13 16l4-4m0 0l-4-4m4 4H7M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2z" />
-              </svg>
-              退出登录
-            </span>
+                  class="w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 font-medium transition-colors flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16l4-4m0 0l-4-4m4 4H7M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2z" />
+            </svg>
+            退出登录
           </button>
         </div>
       </div>
     </div>
 
-    <!-- 移动端菜单（保持不变） -->
-    <div v-if="isMobileMenuOpen" class="md:hidden px-4 pb-3 space-y-2">
+    <!-- 移动端菜单 -->
+    <div v-if="isMobileMenuOpen" class="md:hidden border-t border-stone-200 bg-white px-4 py-4 space-y-2">
       <router-link v-for="item in menuItems" :key="item.path" :to="item.path"
-        class="block text-sm px-4 py-2 rounded-lg font-medium hover:bg-purple-600 transition duration-200"
-        :class="{ 'bg-purple-600': isActive(item.path) }"
-        @click="isMobileMenuOpen = false"
-      >
+        class="block px-4 py-2.5 text-sm font-medium rounded-lg transition-colors"
+        :class="isActive(item.path) ? 'bg-amber-50 text-amber-700' : 'text-stone-600 hover:bg-stone-50'"
+        @click="isMobileMenuOpen = false">
         {{ item.title }}
       </router-link>
-
-      <div class="mt-2 border-t border-gray-700 pt-2">
-        <div class="flex items-center space-x-2">
-          <img :src="user.avatar" class="w-8 h-8 rounded-full" />
-          <span class="text-sm">👋 {{ user.name }}</span>
+      <div class="mt-3 pt-3 border-t border-stone-200 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <img :src="user.avatar" class="w-9 h-9 rounded-full object-cover border border-stone-200" />
+          <span class="text-sm font-medium text-stone-800">{{ user.name }}</span>
         </div>
         <button @click="logout"
-                class="mt-2 w-full px-4 py-2 text-white font-semibold bg-gradient-to-r from-red-400 to-red-500 rounded-lg shadow-md">
+                class="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors">
           退出登录
         </button>
       </div>

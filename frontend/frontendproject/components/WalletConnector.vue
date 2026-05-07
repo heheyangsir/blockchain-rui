@@ -2,8 +2,8 @@
   <div class="space-y-6">
     <!-- 标题 -->
     <div class="text-center">
-      <h2 class="text-2xl font-semibold text-gray-800">连接钱包</h2>
-      <p class="text-gray-500 text-sm">开始您的链上之旅</p>
+      <h2 class="text-2xl font-bold text-stone-900 tracking-tight">连接钱包</h2>
+      <p class="mt-1 text-sm text-stone-500">开始您的链上之旅</p>
     </div>
 
     <!-- 钱包连接按钮 -->
@@ -11,130 +11,84 @@
       @click="handleWalletConnect"
       :class="[
         isConnected
-          ? 'bg-emerald-600 hover:bg-emerald-700'
-          : 'bg-blue-600 hover:bg-blue-700',
-        'w-full py-4 px-6 rounded-lg text-white font-medium transition duration-200',
-        'flex items-center justify-center gap-2',
-        'shadow-md hover:shadow-lg focus:outline-none focus:ring focus:ring-opacity-50'
+          ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30'
+          : 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30',
+        'group w-full py-3.5 px-6 rounded-xl font-medium transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 active:scale-[0.98]',
+        'flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed'
       ]"
       :disabled="!!error"
     >
       <div v-if="isConnected" class="flex items-center gap-2">
-        <svg
-          class="w-6 h-6 transition-transform group-hover:rotate-45"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        <span class="relative">
-          <span class="block">{{ `已连接到 ${client?.name}` }}</span>
-          <span class="hidden group-hover:block">断开链接</span>
-        </span>
+        <span>{{ `已连接到 ${client?.name}` }}</span>
       </div>
       <div v-else class="flex items-center gap-2">
-        <svg
-          class="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-          />
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
         </svg>
         <span>连接钱包</span>
       </div>
     </button>
 
     <!-- 已连接状态 -->
-    <div v-if="isConnected" class="rounded-lg bg-white shadow-md">
-      <div class="p-4">
-        <!-- 地址列表 -->
-        <div class="space-y-3 max-h-60 overflow-y-auto">
-          <div
-            v-for="(address, index) in addresses"
-            :key="address"
-            :class="[
-              'p-3 rounded-lg transition-colors',
-              index === selectedIndex
-                ? 'bg-emerald-50 border border-emerald-200'
-                : 'hover:bg-gray-50'
-            ]"
-            @click="selectedIndex = index"
-          >
-            <div class="flex items-center justify-between">
-              <div class="flex-1">
-                <div class="text-xs text-gray-500 mb-1">地址 #{{ index + 1 }}</div>
-                <div class="font-mono text-sm flex items-center gap-2">
-                  <span>{{ formatAddress(address) }}</span>
-                  <button
-                    @click="copyAddress(address)"
-                    class="text-gray-400 hover:text-gray-600 transition-colors"
-                  >
-                    <svg
-                      class="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                      />
-                    </svg>
-                  </button>
-                </div>
+    <div v-if="isConnected" class="rounded-xl bg-stone-50/50 border border-stone-100 p-4 space-y-3">
+      <!-- 地址列表 -->
+      <div class="max-h-52 overflow-y-auto space-y-2 pr-1">
+        <div
+          v-for="(address, index) in addresses"
+          :key="address"
+          :class="[
+            index === selectedIndex
+              ? 'bg-amber-50 border-amber-200'
+              : 'bg-white border-transparent hover:bg-stone-50 hover:border-stone-200',
+            'p-3 rounded-lg border transition-all cursor-pointer'
+          ]"
+          @click="selectedIndex = index"
+        >
+          <div class="flex items-center justify-between">
+            <div class="flex-1 min-w-0">
+              <div class="text-xs text-stone-400 mb-0.5">地址 #{{ index + 1 }}</div>
+              <div class="font-mono text-sm text-stone-700 flex items-center gap-2 truncate">
+                <span>{{ formatAddress(address) }}</span>
+                <button
+                  @click.stop="copyAddress(address)"
+                  class="flex-shrink-0 p-1 text-stone-400 hover:text-amber-600 transition-colors rounded"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                </button>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- 操作按钮 -->
-        <div class="flex mt-4 gap-2">
-          <button
-            @click="refresh"
-            class="flex-1 py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition duration-200 font-medium"
-          >
-            刷新
-          </button>
-          <button
-            @click="login"
-            class="flex-1 py-2 px-4 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition duration-200 font-medium"
-          >
-            立即登录
-          </button>
-        </div>
+      <!-- 操作按钮 -->
+      <div class="flex gap-3 pt-2">
+        <button
+          @click="refresh"
+          class="flex-1 py-2.5 px-4 bg-white hover:bg-stone-100 text-stone-700 border border-stone-200 rounded-lg transition duration-200 font-medium text-sm"
+        >
+          刷新地址
+        </button>
+        <button
+          @click="login"
+          class="flex-1 py-2.5 px-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-lg transition duration-200 font-medium text-sm shadow-md shadow-amber-500/20"
+        >
+          确认登录
+        </button>
       </div>
     </div>
 
     <!-- 错误提示 -->
-    <div v-if="error" class="mt-4 p-3 bg-red-50 text-red-700 text-sm rounded-lg">
-      <svg
-        class="w-5 h-5 inline-block mr-2"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 21l-1.732-3 2.18-2.18A8.993 8.993 0 0118 9h-1.984c-.988 0-1.954.399-2.803 1.182l-2.18 2.18A8.993 8.993 0 016 9H4.984c-.988 0-1.954.399-2.803 1.182L.98 13.18l2.18 2.18A8.993 8.993 0 016 15h1.984c.988 0 1.954-.399 2.803-1.182l2.18-2.18m-1.414 2.18l-2.18 2.18"
-        />
+    <div v-if="error" class="p-3 bg-red-50 border border-red-100 text-red-700 text-sm rounded-lg flex items-start gap-2">
+      <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 21l-1.732-3 2.18-2.18A8.993 8.993 0 0118 9h-1.984c-.988 0-1.954.399-2.803 1.182l-2.18 2.18A8.993 8.993 0 016 9H4.984c-.988 0-1.954.399-2.803 1.182L.98 13.18l2.18 2.18A8.993 8.993 0 016 15h1.984c.988 0 1.954-.399 2.803-1.182l2.18-2.18m-1.414 2.18l-2.18 2.18" />
       </svg>
-      {{ error }}
+      <span>{{ error }}</span>
     </div>
   </div>
 </template>
